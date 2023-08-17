@@ -9,12 +9,15 @@
     * 64-bit Raspberry Pi OS
     * g++ (with c++20 support)
     * make
+    * libpthread
+    * libcamera
+    * libgstreamer
 
 #### Install
     sh install.sh
 
 #### Compile
-    make build
+    make build [-j <number-of-jobs>]
 
 #### Run
     make run [IMAGE=<path-to-image>]
