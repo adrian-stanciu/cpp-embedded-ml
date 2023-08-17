@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <exception>
@@ -10,6 +11,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -104,18 +106,41 @@ ImageClassifier::ImageClassifier(std::string_view model_path, std::string_view l
 }
 
 namespace {
-    [[nodiscard]] auto get_results(std::span<uint8_t> confidences, const std::vector<std::string>& labels)
+    template <typename T>
+    void copy_image_to_tensor_data(const cv::Mat& image, T *tensor_data)
+    {
+        if constexpr (std::is_same_v<T, uint8_t>) {
+            std::memcpy(tensor_data, image.data, image.total() * image.elemSize());
+        } else if constexpr (std::is_same_v<T, float>) {
+            auto idx = 0;
+            for (auto row = 0; row < image.rows; ++row)
+                for (auto col = 0; col < image.cols; ++col) {
+                    auto pixel = image.at<cv::Vec3b>(row, col);
+                    for (auto ch = 0; ch < image.channels(); ++ch)
+                        tensor_data[idx++] = pixel.val[ch];
+                }
+        }
+    }
+
+    template <typename T>
+    [[nodiscard]] auto get_results(std::span<T> confidences, const std::vector<std::string>& labels)
     {
         static constexpr auto ConfidenceThreshold{0.1};
-        static constexpr auto MaxConfidenceValue{1.0 * std::numeric_limits<uint8_t>::max()};
 
         // results are expressed as (confidence, label) pairs, where confidence is between 0.0 and 1.0
         std::vector<std::pair<double, std::string>> results;
 
         for (size_t label_idx{0}; label_idx < confidences.size(); ++label_idx) {
-            auto confidence{confidences[label_idx] / MaxConfidenceValue};
+            auto confidence{1.0 * confidences[label_idx]};
+            if constexpr (std::is_same_v<T, uint8_t>) {
+                confidence /= std::numeric_limits<uint8_t>::max();
+            }
+
+            if (std::isnan(confidence))
+                continue;
             if (confidence < ConfidenceThreshold)
                 continue;
+
             results.emplace_back(confidence, labels[label_idx]);
         }
 
@@ -133,8 +158,18 @@ namespace {
     cv::resize(image, resized_image, cv::Size{image_width, image_height});
 
     // copy resized image to input tensor
-    std::memcpy(interpreter->typed_input_tensor<unsigned char>(0), resized_image.data,
-        resized_image.total() * resized_image.elemSize());
+    auto input_tensor_type{interpreter->tensor(interpreter->inputs().front())->type};
+    switch (input_tensor_type) {
+    case kTfLiteUInt8:
+        copy_image_to_tensor_data(resized_image, interpreter->typed_input_tensor<uint8_t>(0));
+        break;
+    case kTfLiteFloat32:
+        copy_image_to_tensor_data(resized_image, interpreter->typed_input_tensor<float>(0));
+        break;
+    default:
+        fmt::print(stderr, "input tensor type {:d} not supported\n", input_tensor_type);
+        return {};
+    }
 
     // run inference
     auto from_ts{std::chrono::steady_clock::now()};
@@ -147,6 +182,15 @@ namespace {
     auto duration_ms{std::chrono::duration_cast<std::chrono::milliseconds>(to_ts - from_ts)};
     fmt::print(stdout, "inference duration: {:d} ms\n", duration_ms.count());
 
-    return get_results(std::span{interpreter->typed_output_tensor<uint8_t>(0), labels.size()}, labels);
+    auto output_tensor_type{interpreter->tensor(interpreter->outputs().front())->type};
+    switch (output_tensor_type) {
+    case kTfLiteUInt8:
+        return get_results(std::span{interpreter->typed_output_tensor<uint8_t>(0), labels.size()}, labels);
+    case kTfLiteFloat32:
+        return get_results(std::span{interpreter->typed_output_tensor<float>(0), labels.size()}, labels);
+    default:
+        fmt::print(stderr, "output tensor type {:d} not supported\n", output_tensor_type);
+        return {};
+    }
 }
 
