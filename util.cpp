@@ -4,11 +4,15 @@
 #include <cstdlib>
 #include <cstring>
 #include <optional>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include <unistd.h>
 
 #include <fmt/core.h>
+#include <opencv2/opencv.hpp>
 
 [[nodiscard]] std::optional<Options> parse_options(int argc, char **argv)
 {
@@ -60,5 +64,16 @@
         return value;
     else
         return std::nullopt;
+}
+
+void write_results(const std::vector<std::pair<double, std::string>>& results, cv::Mat& image)
+{
+    for (const auto& [confidence, label] : results)
+        fmt::print("{:.2f} | {:s}\n", confidence, label);
+
+    const auto& [confidence, label]{results.front()};
+    auto text{fmt::format("{:.2f} | {:s}", confidence, label)};
+    cv::putText(image, text.data(), cv::Point(image.rows / 10, image.cols / 10), cv::FONT_HERSHEY_SIMPLEX, 1.0,
+        cv::Scalar(0, 0, 255), 2);
 }
 
