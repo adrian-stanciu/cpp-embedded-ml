@@ -14,6 +14,8 @@
 #include <opencv2/opencv.hpp>
 
 namespace {
+    static constexpr auto ConfidenceThreshold{0.1};
+
     struct Options {
         const char *labels_path{nullptr};
         const char *image_path{nullptr};
@@ -112,7 +114,7 @@ int main(int argc, char **argv)
     try {
         ImageClassifier image_classifier{options->model_path, options->labels_path, options->num_threads};
 
-        auto results{image_classifier.run(*image)};
+        auto results{image_classifier.run(*image, ConfidenceThreshold)};
         if (results.empty()) {
             fmt::print(stderr, "failed to classify the image\n");
             return EXIT_FAILURE;
