@@ -5,9 +5,11 @@ CXXFLAGS := -std=c++20 -O2 -Wall -Wextra -Werror $(shell pkg-config --cflags ope
 LDLIBS := -ltensorflow-lite -lfmt $(shell pkg-config --libs opencv4)
 
 build: image_classifier
-image_classifier: image_classifier.o ml.o
-image_classifier.o: image_classifier.cpp camera.hpp ml.hpp
+image_classifier: image_classifier.o camera.o ml.o util.o
+image_classifier.o: image_classifier.cpp camera.hpp ml.hpp util.hpp
+camera.o: camera.cpp camera.hpp
 ml.o: ml.cpp ml.hpp
+util.o: util.cpp util.hpp
 
 LABELS ?= labels_mobilenet_quant_v1_224.txt
 MODEL ?= mobilenet_v1_1.0_224_quant.tflite

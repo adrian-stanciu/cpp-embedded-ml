@@ -41,3 +41,5 @@ private:
     cv::VideoCapture camera;
 };
 
+[[nodiscard]] std::optional<cv::Mat> retrieve_image(const char *image_path);
+
