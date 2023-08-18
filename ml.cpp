@@ -20,7 +20,7 @@
 #include <tensorflow/lite/interpreter_builder.h>
 #include <tensorflow/lite/kernels/register.h>
 
-ImageClassifier::ImageClassifier(std::string_view model_path, std::string_view labels_path)
+ImageClassifier::ImageClassifier(std::string_view model_path, std::string_view labels_path, int num_threads)
 {
     // load model
     [this, &model_path]() {
@@ -30,14 +30,12 @@ ImageClassifier::ImageClassifier(std::string_view model_path, std::string_view l
     }();
 
     // build interpreter
-    [this]() {
-        static constexpr auto NumThreads{2};
-
+    [this, num_threads]() {
         tflite::ops::builtin::BuiltinOpResolver resolver;
         tflite::InterpreterBuilder builder(*model, resolver);
 
-        if (builder.SetNumThreads(NumThreads) != kTfLiteOk)
-            fmt::print(stderr, "failed to set the number of threads to {:d}\n", NumThreads);
+        if (builder.SetNumThreads(num_threads) != kTfLiteOk)
+            fmt::print(stderr, "failed to set the number of threads to {:d}\n", num_threads);
 
         builder(&interpreter);
         if (!interpreter)

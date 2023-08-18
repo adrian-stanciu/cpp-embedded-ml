@@ -1,9 +1,11 @@
 #include "camera.hpp"
 #include "ml.hpp"
 
+#include <charconv>
 #include <cstdlib>
 #include <exception>
 #include <optional>
+#include <string_view>
 
 #include <unistd.h>
 
@@ -16,7 +18,16 @@ namespace {
         const char *labels_path{nullptr};
         const char *image_path{nullptr};
         const char *model_path{nullptr};
+        int num_threads{1};
     };
+
+    [[nodiscard]] std::optional<int> to_int(std::string_view str)
+    {
+        if (int value; std::from_chars(str.data(), str.data() + str.size(), value).ec == std::errc{})
+            return value;
+        else
+            return std::nullopt;
+    }
 
     [[nodiscard]] std::optional<Options> parse_options(int argc, char **argv)
     {
@@ -26,10 +37,11 @@ namespace {
         opterr = 0;
 
         int opt;
-        while ((opt = getopt(argc, argv, "hi:l:m:")) != -1) {
+        while ((opt = getopt(argc, argv, "hi:l:m:t:")) != -1) {
             switch (opt) {
             case 'h':
-                fmt::print("usage: {:s} [-i <path-to-image>] -l <path-to-labels> -m <path-to-model>\n", argv[0]);
+                fmt::print("usage: {:s} [-i <path-to-image>] -l <path-to-labels> -m <path-to-model> [-t <number-of-threads>]\n",
+                    argv[0]);
                 exit(EXIT_SUCCESS);
             case 'i':
                 options.image_path = optarg;
@@ -39,6 +51,9 @@ namespace {
                 break;
             case 'm':
                 options.model_path = optarg;
+                break;
+            case 't':
+                options.num_threads = to_int(std::string_view{optarg, strlen(optarg)}).value_or(1);
                 break;
             default:
                 fmt::print(stderr, "unknown option '{:c}'\n", optopt);
@@ -95,7 +110,7 @@ int main(int argc, char **argv)
     }
 
     try {
-        ImageClassifier image_classifier{options->model_path, options->labels_path};
+        ImageClassifier image_classifier{options->model_path, options->labels_path, options->num_threads};
 
         auto results{image_classifier.run(*image)};
         if (results.empty()) {

@@ -10,7 +10,7 @@
 #include <tensorflow/lite/interpreter_builder.h>
 
 struct ImageClassifier {
-    ImageClassifier(std::string_view model_path, std::string_view labels_path);
+    ImageClassifier(std::string_view model_path, std::string_view labels_path, int num_threads);
 
     [[nodiscard]] std::vector<std::pair<double, std::string>> run(const cv::Mat& image) const noexcept;
 
