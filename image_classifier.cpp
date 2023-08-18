@@ -1,102 +1,17 @@
 #include "camera.hpp"
 #include "ml.hpp"
+#include "util.hpp"
 
-#include <charconv>
 #include <cstdlib>
 #include <exception>
-#include <optional>
-#include <string_view>
-
-#include <unistd.h>
 
 #include <fmt/core.h>
 #include <opencv2/core/utils/logger.hpp>
-#include <opencv2/opencv.hpp>
-
-namespace {
-    static constexpr auto ConfidenceThreshold{0.1};
-
-    struct Options {
-        const char *labels_path{nullptr};
-        const char *image_path{nullptr};
-        const char *model_path{nullptr};
-        int num_threads{1};
-    };
-
-    [[nodiscard]] std::optional<int> to_int(std::string_view str)
-    {
-        if (int value; std::from_chars(str.data(), str.data() + str.size(), value).ec == std::errc{})
-            return value;
-        else
-            return std::nullopt;
-    }
-
-    [[nodiscard]] std::optional<Options> parse_options(int argc, char **argv)
-    {
-        Options options{};
-
-        // print nothing on errors
-        opterr = 0;
-
-        int opt;
-        while ((opt = getopt(argc, argv, "hi:l:m:t:")) != -1) {
-            switch (opt) {
-            case 'h':
-                fmt::print("usage: {:s} [-i <path-to-image>] -l <path-to-labels> -m <path-to-model> [-t <number-of-threads>]\n",
-                    argv[0]);
-                exit(EXIT_SUCCESS);
-            case 'i':
-                options.image_path = optarg;
-                break;
-            case 'l':
-                options.labels_path = optarg;
-                break;
-            case 'm':
-                options.model_path = optarg;
-                break;
-            case 't':
-                options.num_threads = to_int(std::string_view{optarg, strlen(optarg)}).value_or(1);
-                break;
-            default:
-                fmt::print(stderr, "unknown option '{:c}'\n", optopt);
-                break;
-            }
-        }
-
-        if (!options.labels_path) {
-            fmt::print(stderr, "labels not provided\n");
-            return std::nullopt;
-        }
-        if (!options.model_path) {
-            fmt::print(stderr, "model not provided\n");
-            return std::nullopt;
-        }
-
-        return options;
-    }
-
-    [[nodiscard]] std::optional<cv::Mat> retrieve_image(const char *image_path)
-    {
-        if (image_path)
-            return cv::imread(image_path);
-
-        Camera camera;
-        if (!camera.is_open()) {
-            fmt::print(stderr, "failed to open camera\n");
-            return std::nullopt;
-        }
-
-        while (true) {
-            auto image{camera.read_image()};
-            cv::imshow("camera", image);
-            if (cv::waitKey(1) > 0)
-                return image;
-        }
-    }
-}
 
 int main(int argc, char **argv)
 {
+    static constexpr auto ConfidenceThreshold{0.1};
+
     cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
     auto options{parse_options(argc, argv)};
