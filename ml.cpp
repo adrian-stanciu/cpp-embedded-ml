@@ -121,10 +121,9 @@ namespace {
     }
 
     template <typename T>
-    [[nodiscard]] auto get_results(std::span<T> confidences, const std::vector<std::string>& labels)
+    [[nodiscard]] auto get_results(std::span<T> confidences, const std::vector<std::string>& labels,
+        double confidence_threshold)
     {
-        static constexpr auto ConfidenceThreshold{0.1};
-
         // results are expressed as (confidence, label) pairs, where confidence is between 0.0 and 1.0
         std::vector<std::pair<double, std::string>> results;
 
@@ -136,7 +135,7 @@ namespace {
 
             if (std::isnan(confidence))
                 continue;
-            if (confidence < ConfidenceThreshold)
+            if (confidence < confidence_threshold)
                 continue;
 
             results.emplace_back(confidence, labels[label_idx]);
@@ -149,7 +148,8 @@ namespace {
     }
 }
 
-[[nodiscard]] std::vector<std::pair<double, std::string>> ImageClassifier::run(const cv::Mat& image) const noexcept
+[[nodiscard]] std::vector<std::pair<double, std::string>> ImageClassifier::run(const cv::Mat& image,
+    double confidence_threshold) const noexcept
 {
     // resize image to required dimensions
     cv::Mat resized_image;
@@ -183,9 +183,11 @@ namespace {
     auto output_tensor_type{interpreter->tensor(interpreter->outputs().front())->type};
     switch (output_tensor_type) {
     case kTfLiteUInt8:
-        return get_results(std::span{interpreter->typed_output_tensor<uint8_t>(0), labels.size()}, labels);
+        return get_results(std::span{interpreter->typed_output_tensor<uint8_t>(0), labels.size()}, labels,
+            confidence_threshold);
     case kTfLiteFloat32:
-        return get_results(std::span{interpreter->typed_output_tensor<float>(0), labels.size()}, labels);
+        return get_results(std::span{interpreter->typed_output_tensor<float>(0), labels.size()}, labels,
+            confidence_threshold);
     default:
         fmt::print(stderr, "output tensor type {:d} not supported\n", output_tensor_type);
         return {};
