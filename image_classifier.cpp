@@ -1,102 +1,196 @@
-#include "camera.hpp"
-#include "ml.hpp"
-#include "util.hpp"
+#include "image_classifier.hpp"
 
-#include <cstdlib>
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <exception>
+#include <fstream>
+#include <limits>
+#include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include <fmt/core.h>
-#include <opencv2/core/utils/logger.hpp>
 #include <opencv2/opencv.hpp>
+#include <tensorflow/lite/interpreter_builder.h>
+#include <tensorflow/lite/kernels/register.h>
+
+ImageClassifier::ImageClassifier(std::string_view model_path, std::string_view labels_path, int num_threads)
+{
+    // load model
+    [this, &model_path]() {
+        model = tflite::FlatBufferModel::BuildFromFile(model_path.data());
+        if (!model)
+            throw std::runtime_error("failed to load model");
+    }();
+
+    // build interpreter
+    [this, num_threads]() {
+        tflite::ops::builtin::BuiltinOpResolver resolver;
+        tflite::InterpreterBuilder builder(*model, resolver);
+
+        if (builder.SetNumThreads(num_threads) != kTfLiteOk)
+            fmt::print(stderr, "failed to set the number of threads to {:d}\n", num_threads);
+
+        builder(&interpreter);
+        if (!interpreter)
+            throw std::runtime_error("failed to build interpreter");
+
+        // allocate tensors
+        if (interpreter->AllocateTensors() != kTfLiteOk)
+            throw std::runtime_error("failed to allocate tensors");
+    }();
+
+    // load labels
+    [this, &labels_path]() {
+        std::ifstream labels_ifs{labels_path.data()};
+        if (!labels_ifs.is_open())
+            throw std::runtime_error("failed to load labels");
+
+        std::string label;
+        while (getline(labels_ifs, label))
+            if (!label.empty())
+                labels.push_back(std::move(label));
+    }();
+
+    // retrieve required image dimensions
+    [this]() {
+        auto inputs{interpreter->inputs()};
+        if (inputs.empty())
+            throw std::runtime_error("interpreter has no inputs");
+
+        auto *input_tensor{interpreter->tensor(inputs.front())};
+        if (!input_tensor)
+            throw std::runtime_error("no input tensor");
+
+        auto *input_dims{input_tensor->dims};
+        if (!input_dims)
+            throw std::runtime_error("no dims for input tensor");
+
+        if (input_dims->size < 3)
+            throw std::runtime_error("not enough dims for input tensor");
+
+        image_height = input_dims->data[1];
+        image_width = input_dims->data[2];
+    }();
+
+    // validate output size
+    [this]() {
+        auto outputs{interpreter->outputs()};
+        if (outputs.empty())
+            throw std::runtime_error("interpreter has no outputs");
+
+        auto *output_tensor{interpreter->tensor(outputs.front())};
+        if (!output_tensor)
+            throw std::runtime_error("no output tensor");
+
+        auto *output_dims{output_tensor->dims};
+        if (!output_dims)
+            throw std::runtime_error("no dims for output tensor");
+
+        if (output_dims->size < 1)
+            throw std::runtime_error("not enough dims for output tensor");
+
+        auto output_size{static_cast<size_t>(output_dims->data[output_dims->size - 1])};
+        if (output_size != labels.size())
+            throw std::runtime_error(fmt::format("mismatch between output size ({:d}) and number of labels ({:d})",
+                output_size, labels.size()));
+    }();
+}
 
 namespace {
-    constexpr auto ConfidenceThreshold{0.1};
-
-    void show_results(const std::vector<std::pair<double, std::string>>& results, cv::Mat& image)
+    template <typename T>
+    void copy_image_to_tensor_data(const cv::Mat& image, T *tensor_data)
     {
-        for (const auto& [confidence, label] : results)
-            fmt::print("{:.2f} | {:s}\n", confidence, label);
-
-        const auto& [confidence, label]{results.front()};
-        auto text{fmt::format("{:.2f} | {:s}", confidence, label)};
-        cv::putText(image, text.data(), cv::Point(image.rows / 10, image.cols / 10), cv::FONT_HERSHEY_SIMPLEX, 1.0,
-                cv::Scalar(0, 0, 255), 2);
-    }
-
-    [[nodiscard]] auto handle_image(const ImageClassifier& image_classifier, std::string_view image_path)
-    {
-        auto image{cv::imread(image_path.data())};
-        if (image.empty()) {
-            fmt::print(stderr, "empty image\n");
-            return EXIT_FAILURE;
-        }
-
-        if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty()) {
-            show_results(results, image);
-
-            cv::imshow("camera", image);
-            cv::waitKey(0);
-            return EXIT_SUCCESS;
-        } else {
-            fmt::print(stderr, "failed to classify image\n");
-            return EXIT_FAILURE;
+        if constexpr (std::is_same_v<T, uint8_t>) {
+            std::memcpy(tensor_data, image.data, image.total() * image.elemSize());
+        } else if constexpr (std::is_same_v<T, float>) {
+            auto idx = 0;
+            for (auto row = 0; row < image.rows; ++row)
+                for (auto col = 0; col < image.cols; ++col) {
+                    auto pixel = image.at<cv::Vec3b>(row, col);
+                    for (auto ch = 0; ch < image.channels(); ++ch)
+                        tensor_data[idx++] = pixel.val[ch];
+                }
         }
     }
 
-    [[nodiscard]] auto handle_camera_stream(const ImageClassifier& image_classifier)
+    template <typename T>
+    [[nodiscard]] auto get_results(std::span<T> confidences, const std::vector<std::string>& labels,
+        double confidence_threshold)
     {
-        Camera camera;
-        if (!camera.is_open()) {
-            fmt::print(stderr, "failed to open camera\n");
-            return EXIT_FAILURE;
-        }
+        // results are expressed as (confidence, label) pairs, where confidence is between 0.0 and 1.0
+        std::vector<std::pair<double, std::string>> results;
 
-        while (true) {
-            auto image{camera.read_image()};
-            if (image.empty()) {
-                fmt::print(stderr, "empty image\n");
-                continue;
+        for (size_t label_idx{0}; label_idx < confidences.size(); ++label_idx) {
+            auto confidence{1.0 * confidences[label_idx]};
+            if constexpr (std::is_same_v<T, uint8_t>) {
+                confidence /= std::numeric_limits<uint8_t>::max();
             }
 
-            if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty())
-                show_results(results, image);
-            else
-                fmt::print(stdout, "no results\n");
-            fmt::print("\n");
+            if (std::isnan(confidence))
+                continue;
+            if (confidence < confidence_threshold)
+                continue;
 
-            cv::imshow("camera", image);
-            if (cv::waitKey(1) > 0)
-                break;
+            results.emplace_back(confidence, labels[label_idx]);
         }
 
-        return EXIT_SUCCESS;
+        // sort results in non-increasing order of confidence
+        std::sort(results.rbegin(), results.rend());
+
+        return results;
     }
 }
 
-int main(int argc, char **argv)
+[[nodiscard]] std::vector<std::pair<double, std::string>> ImageClassifier::run(const cv::Mat& image,
+    double confidence_threshold) const noexcept
 {
-    cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
+    // resize image to required dimensions
+    cv::Mat resized_image;
+    cv::resize(image, resized_image, cv::Size{image_width, image_height});
 
-    auto options{parse_options(argc, argv)};
-    if (!options) {
-        fmt::print(stderr, "failed to parse options - run '{:s} -h' for usage\n", argv[0]);
-        return EXIT_FAILURE;
+    // copy resized image to input tensor
+    auto input_tensor_type{interpreter->tensor(interpreter->inputs().front())->type};
+    switch (input_tensor_type) {
+    case kTfLiteUInt8:
+        copy_image_to_tensor_data(resized_image, interpreter->typed_input_tensor<uint8_t>(0));
+        break;
+    case kTfLiteFloat32:
+        copy_image_to_tensor_data(resized_image, interpreter->typed_input_tensor<float>(0));
+        break;
+    default:
+        fmt::print(stderr, "input tensor type {:d} not supported\n", input_tensor_type);
+        return {};
     }
 
-    try {
-        ImageClassifier image_classifier{options->model_path, options->labels_path, options->num_threads};
+    // run inference
+    auto from_ts{std::chrono::steady_clock::now()};
+    if (interpreter->Invoke() != kTfLiteOk) {
+        fmt::print(stderr, "failed to run inference\n");
+        return {};
+    }
+    auto to_ts{std::chrono::steady_clock::now()};
 
-        if (options->image_path)
-            return handle_image(image_classifier, options->image_path);
-        else
-            return handle_camera_stream(image_classifier);
-    } catch (const std::exception& e) {
-        fmt::print("error: {:s}\n", e.what());
-        return EXIT_FAILURE;
+    auto duration_ms{std::chrono::duration_cast<std::chrono::milliseconds>(to_ts - from_ts)};
+    fmt::print(stdout, "inference duration: {:d} ms\n", duration_ms.count());
+
+    auto output_tensor_type{interpreter->tensor(interpreter->outputs().front())->type};
+    switch (output_tensor_type) {
+    case kTfLiteUInt8:
+        return get_results(std::span{interpreter->typed_output_tensor<uint8_t>(0), labels.size()}, labels,
+            confidence_threshold);
+    case kTfLiteFloat32:
+        return get_results(std::span{interpreter->typed_output_tensor<float>(0), labels.size()}, labels,
+            confidence_threshold);
+    default:
+        fmt::print(stderr, "output tensor type {:d} not supported\n", output_tensor_type);
+        return {};
     }
 }
 
