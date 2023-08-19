@@ -1,9 +1,11 @@
 #include "camera.hpp"
 #include "cmdline_parser.hpp"
 #include "image_classifier.hpp"
+#include "rps.hpp"
 
 #include <cstdlib>
 #include <exception>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -15,18 +17,37 @@
 namespace {
     constexpr auto ConfidenceThreshold{0.1};
 
-    void show_results(const std::vector<ic::ImageClassifier::Result>& results, cv::Mat& image)
+    void show_on_image(const std::string& text, cv::Mat& image, cv::Point position)
+    {
+        cv::putText(image, text.data(), position, cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 255), 2);
+    }
+
+    void report_results(const std::vector<ic::ImageClassifier::Result>& results, cv::Mat& image)
     {
         for (const auto& [confidence, label] : results)
             fmt::print("{:.2f} | {:s}\n", confidence, label);
 
         const auto& [confidence, label]{results.front()};
         auto text{fmt::format("{:.2f} | {:s}", confidence, label)};
-        cv::putText(image, text.data(), cv::Point(image.rows / 10, image.cols / 10), cv::FONT_HERSHEY_SIMPLEX, 1.0,
-            cv::Scalar(0, 0, 255), 2);
+        show_on_image(text, image, cv::Point(image.cols / 20, image.rows / 10));
     }
 
-    [[nodiscard]] auto handle_image(const ic::ImageClassifier& image_classifier, std::string_view image_path)
+    void handle_rps(std::optional<ic::RockPaperScissors>& rps, const std::string& player_hand, cv::Mat& image)
+    {
+        if (!rps)
+            return;
+
+        if (auto rps_game = rps->play(player_hand); rps_game) {
+            auto text{rps_game->to_string()};
+            fmt::print("{:s}\n", text);
+            show_on_image(text, image, cv::Point(image.cols / 20, image.rows / 5));
+        } else {
+            fmt::print(stderr, "failed to classify image as rock, paper or scissors\n");
+        }
+    }
+
+    [[nodiscard]] auto handle_image(const ic::ImageClassifier& image_classifier, std::string_view image_path,
+        std::optional<ic::RockPaperScissors>& rps)
     {
         auto image{cv::imread(image_path.data())};
         if (image.empty()) {
@@ -35,7 +56,9 @@ namespace {
         }
 
         if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty()) {
-            show_results(results, image);
+            report_results(results, image);
+
+            handle_rps(rps, results.front().label, image);
 
             cv::imshow("camera", image);
             cv::waitKey(0);
@@ -46,7 +69,8 @@ namespace {
         }
     }
 
-    [[nodiscard]] auto handle_camera_stream(const ic::ImageClassifier& image_classifier)
+    [[nodiscard]] auto handle_camera_stream(const ic::ImageClassifier& image_classifier,
+        std::optional<ic::RockPaperScissors>& rps)
     {
         ic::Camera camera;
         if (!camera.is_open()) {
@@ -61,16 +85,22 @@ namespace {
                 continue;
             }
 
-            if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty())
-                show_results(results, image);
-            else
+            if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty()) {
+                report_results(results, image);
+
+                handle_rps(rps, results.front().label, image);
+            } else {
                 fmt::print(stdout, "no results\n");
+            }
             fmt::print("\n");
 
             cv::imshow("camera", image);
             if (cv::waitKey(1) > 0)
                 break;
         }
+
+        if (rps)
+            rps->print_stats();
 
         return EXIT_SUCCESS;
     }
@@ -86,13 +116,17 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+    std::optional<ic::RockPaperScissors> rps;
+    if (options->play_rps)
+        rps = ic::RockPaperScissors{};
+
     try {
         ic::ImageClassifier image_classifier{options->model_path, options->labels_path, options->num_threads};
 
         if (options->image_path)
-            return handle_image(image_classifier, options->image_path);
+            return handle_image(image_classifier, options->image_path, rps);
         else
-            return handle_camera_stream(image_classifier);
+            return handle_camera_stream(image_classifier, rps);
     } catch (const std::exception& e) {
         fmt::print("error: {:s}\n", e.what());
         return EXIT_FAILURE;

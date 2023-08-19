@@ -10,6 +10,22 @@
 
 #include <fmt/core.h>
 
+namespace {
+    void print_help(const char *binary)
+    {
+        fmt::print(
+R"(usage: {:s} [-g] [-i <path-to-image>] -l <path-to-labels> -m <path-to-model> [-t <number-of-threads>]
+options:
+    -g: optional rock-paper-scissors game enabled (disabled by default)
+    -i: optional path to image (live camera stream by default)
+    -l: mandatory path to labels
+    -m: mandatory path to model
+    -t: optional number of threads to run the inference (1 by default)
+)",
+        binary);
+    }
+}
+
 [[nodiscard]] std::optional<ic::Options> ic::parse_options(int argc, char **argv)
 {
     Options options{};
@@ -18,11 +34,13 @@
     opterr = 0;
 
     int opt;
-    while ((opt = getopt(argc, argv, "hi:l:m:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "ghi:l:m:t:")) != -1) {
         switch (opt) {
+        case 'g':
+            options.play_rps = true;
+            break;
         case 'h':
-            fmt::print("usage: {:s} [-i <path-to-image>] -l <path-to-labels> -m <path-to-model> [-t <number-of-threads>]\n",
-                argv[0]);
+            print_help(argv[0]);
             exit(EXIT_SUCCESS);
         case 'i':
             options.image_path = optarg;

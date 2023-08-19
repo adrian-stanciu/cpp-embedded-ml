@@ -97,8 +97,8 @@ ic::ImageClassifier::ImageClassifier(std::string_view model_path, std::string_vi
         if (output_dims->size < 1)
             throw std::runtime_error("not enough dims for output tensor");
 
-        auto output_size{static_cast<size_t>(output_dims->data[output_dims->size - 1])};
-        if (output_size != labels.size())
+        if (auto output_size{static_cast<size_t>(output_dims->data[output_dims->size - 1])};
+            output_size != labels.size())
             throw std::runtime_error(fmt::format("mismatch between output size ({:d}) and number of labels ({:d})",
                 output_size, labels.size()));
     }();
@@ -183,6 +183,7 @@ namespace {
     auto duration_ms{std::chrono::duration_cast<std::chrono::milliseconds>(to_ts - from_ts)};
     fmt::print(stdout, "inference duration: {:d} ms\n", duration_ms.count());
 
+    // report results
     auto output_tensor_type{interpreter->tensor(interpreter->outputs().front())->type};
     switch (output_tensor_type) {
     case kTfLiteUInt8:
