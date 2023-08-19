@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 #include <opencv2/opencv.hpp>
@@ -11,10 +10,14 @@
 
 namespace ic {
     struct ImageClassifier {
+        struct Result {
+            double confidence;
+            std::string label;
+        };
+
         ImageClassifier(std::string_view model_path, std::string_view labels_path, int num_threads);
 
-        [[nodiscard]] std::vector<std::pair<double, std::string>> run(const cv::Mat& image,
-            double confidence_threshold) const noexcept;
+        [[nodiscard]] std::vector<Result> run(const cv::Mat& image, double confidence_threshold) const noexcept;
 
     private:
         std::unique_ptr<tflite::FlatBufferModel> model;

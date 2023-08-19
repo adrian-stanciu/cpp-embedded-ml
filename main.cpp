@@ -6,7 +6,6 @@
 #include <exception>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 #include <fmt/core.h>
@@ -16,7 +15,7 @@
 namespace {
     constexpr auto ConfidenceThreshold{0.1};
 
-    void show_results(const std::vector<std::pair<double, std::string>>& results, cv::Mat& image)
+    void show_results(const std::vector<ic::ImageClassifier::Result>& results, cv::Mat& image)
     {
         for (const auto& [confidence, label] : results)
             fmt::print("{:.2f} | {:s}\n", confidence, label);

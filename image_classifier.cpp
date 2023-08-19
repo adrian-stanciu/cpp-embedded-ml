@@ -11,6 +11,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -125,7 +126,7 @@ namespace {
         double confidence_threshold)
     {
         // results are expressed as (confidence, label) pairs, where confidence is between 0.0 and 1.0
-        std::vector<std::pair<double, std::string>> results;
+        std::vector<ic::ImageClassifier::Result> results;
 
         for (size_t label_idx{0}; label_idx < confidences.size(); ++label_idx) {
             auto confidence{1.0 * confidences[label_idx]};
@@ -142,13 +143,15 @@ namespace {
         }
 
         // sort results in non-increasing order of confidence
-        std::sort(results.rbegin(), results.rend());
+        std::sort(results.begin(), results.end(), [](const auto& lhs, const auto& rhs) {
+            return std::tie(lhs.confidence, rhs.label) > std::tie(rhs.confidence, lhs.label);
+        });
 
         return results;
     }
 }
 
-[[nodiscard]] std::vector<std::pair<double, std::string>> ic::ImageClassifier::run(const cv::Mat& image,
+[[nodiscard]] std::vector<ic::ImageClassifier::Result> ic::ImageClassifier::run(const cv::Mat& image,
     double confidence_threshold) const noexcept
 {
     // resize image to required dimensions
