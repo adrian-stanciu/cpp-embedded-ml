@@ -14,17 +14,26 @@ image_classifier: ${OBJS}
 cmdline_parser.o: cmdline_parser.cpp cmdline_parser.hpp
 image_classifier.o: image_classifier.cpp image_classifier.hpp
 main.o: main.cpp ${HDRS}
+rps.o: rps.cpp rps.hpp
 
 LABELS ?= labels_mobilenet_quant_v1_224.txt
 MODEL ?= mobilenet_v1_1.0_224_quant.tflite
 RUN_CMD := LC_ALL=C LIBCAMERA_LOG_LEVELS=ERROR ./image_classifier -l ${LABELS} -m ${MODEL}
 
-run: build
 ifdef IMAGE
-	${RUN_CMD} -i ${IMAGE}
-else
-	${RUN_CMD}
+RUN_CMD := ${RUN_CMD} -i ${IMAGE}
 endif
+
+ifdef NUM_THREADS
+RUN_CMD := ${RUN_CMD} -t ${NUM_THREADS}
+endif
+
+ifeq (${PLAY_RPS}, YES)
+RUN_CMD := ${RUN_CMD} -g
+endif
+
+run: build
+	${RUN_CMD}
 
 zip: ${SRCS} ${HDRS} ${SCRIPTS} Makefile README.md
 	zip image_classifier.zip $^

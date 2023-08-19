@@ -20,7 +20,12 @@
     make build [-j <number-of-jobs>]
 
 #### Run
-    make run [IMAGE=<path-to-image>]
+    make run \
+        [IMAGE=<path-to-image>] \
+        [LABELS=<path-to-labels>] \
+        [MODEL=<path-to-model>] \
+        [NUM_THREADS=<number-of-threads>] \
+        [PLAY_RPS=YES]
 
 #### Clean up
     make clean

@@ -1,28 +1,23 @@
 #pragma once
 
+#include <optional>
+
 #include <fmt/core.h>
 #include <opencv2/opencv.hpp>
 
 namespace ic {
     struct Camera {
-        static constexpr auto Width{640};
-        static constexpr auto Height{480};
-        static constexpr auto FrameRate{30};
-
-        [[nodiscard]] static std::string gstreamer_pipeline(int width, int height, int framerate)
-        {
-            return fmt::format(R"(
+        static constexpr const char *GstreamerPipeline{R"(
             libcamerasrc !
             video/x-raw,
-            width=(int){:d},
-            height=(int){:d},
-            framerate=(fraction){:d}/1 !
+            width=(int)640,
+            height=(int)480,
+            framerate=(fraction)30/1 !
             videoconvert !
-            appsink)",
-            width, height, framerate);
-        }
+            appsink
+        )"};
 
-        Camera() : camera(gstreamer_pipeline(Width, Height, FrameRate), cv::CAP_GSTREAMER) {}
+        Camera() : camera(GstreamerPipeline, cv::CAP_GSTREAMER) {}
 
         [[nodiscard]] bool is_open() const noexcept
         {
