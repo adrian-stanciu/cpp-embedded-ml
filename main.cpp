@@ -27,7 +27,7 @@ namespace {
             cv::Scalar(0, 0, 255), 2);
     }
 
-    [[nodiscard]] auto handle_image(const ImageClassifier& image_classifier, std::string_view image_path)
+    [[nodiscard]] auto handle_image(const ic::ImageClassifier& image_classifier, std::string_view image_path)
     {
         auto image{cv::imread(image_path.data())};
         if (image.empty()) {
@@ -47,9 +47,9 @@ namespace {
         }
     }
 
-    [[nodiscard]] auto handle_camera_stream(const ImageClassifier& image_classifier)
+    [[nodiscard]] auto handle_camera_stream(const ic::ImageClassifier& image_classifier)
     {
-        Camera camera;
+        ic::Camera camera;
         if (!camera.is_open()) {
             fmt::print(stderr, "failed to open camera\n");
             return EXIT_FAILURE;
@@ -81,14 +81,14 @@ int main(int argc, char **argv)
 {
     cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
-    auto options{parse_options(argc, argv)};
+    auto options{ic::parse_options(argc, argv)};
     if (!options) {
         fmt::print(stderr, "failed to parse options - run '{:s} -h' for usage\n", argv[0]);
         return EXIT_FAILURE;
     }
 
     try {
-        ImageClassifier image_classifier{options->model_path, options->labels_path, options->num_threads};
+        ic::ImageClassifier image_classifier{options->model_path, options->labels_path, options->num_threads};
 
         if (options->image_path)
             return handle_image(image_classifier, options->image_path);

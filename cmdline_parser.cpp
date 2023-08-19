@@ -10,7 +10,7 @@
 
 #include <fmt/core.h>
 
-[[nodiscard]] std::optional<Options> parse_options(int argc, char **argv)
+[[nodiscard]] std::optional<ic::Options> ic::parse_options(int argc, char **argv)
 {
     Options options{};
 
