@@ -3,14 +3,15 @@
 #include <fmt/core.h>
 #include <opencv2/opencv.hpp>
 
-struct Camera {
-    static constexpr auto Width{640};
-    static constexpr auto Height{480};
-    static constexpr auto FrameRate{30};
+namespace ic {
+    struct Camera {
+        static constexpr auto Width{640};
+        static constexpr auto Height{480};
+        static constexpr auto FrameRate{30};
 
-    [[nodiscard]] static std::string gstreamer_pipeline(int width, int height, int framerate)
-    {
-        return fmt::format(R"(
+        [[nodiscard]] static std::string gstreamer_pipeline(int width, int height, int framerate)
+        {
+            return fmt::format(R"(
             libcamerasrc !
             video/x-raw,
             width=(int){:d},
@@ -18,28 +19,27 @@ struct Camera {
             framerate=(fraction){:d}/1 !
             videoconvert !
             appsink)",
-            width,
-            height,
-            framerate);
-    }
+            width, height, framerate);
+        }
 
-    Camera() : camera(gstreamer_pipeline(Width, Height, FrameRate), cv::CAP_GSTREAMER) {}
+        Camera() : camera(gstreamer_pipeline(Width, Height, FrameRate), cv::CAP_GSTREAMER) {}
 
-    [[nodiscard]] bool is_open() const noexcept
-    {
-        return camera.isOpened();
-    }
+        [[nodiscard]] bool is_open() const noexcept
+        {
+            return camera.isOpened();
+        }
 
-    [[nodiscard]] cv::Mat read_image() noexcept
-    {
-        cv::Mat image;
-        camera >> image;
-        return image;
-    }
+        [[nodiscard]] cv::Mat read_image() noexcept
+        {
+            cv::Mat image;
+            camera >> image;
+            return image;
+        }
 
-private:
-    cv::VideoCapture camera;
-};
+        private:
+        cv::VideoCapture camera;
+    };
 
-[[nodiscard]] std::optional<cv::Mat> retrieve_image(const char *image_path);
+    [[nodiscard]] std::optional<cv::Mat> retrieve_image(const char *image_path);
+}
 

@@ -20,7 +20,7 @@
 #include <tensorflow/lite/interpreter_builder.h>
 #include <tensorflow/lite/kernels/register.h>
 
-ImageClassifier::ImageClassifier(std::string_view model_path, std::string_view labels_path, int num_threads)
+ic::ImageClassifier::ImageClassifier(std::string_view model_path, std::string_view labels_path, int num_threads)
 {
     // load model
     [this, &model_path]() {
@@ -148,7 +148,7 @@ namespace {
     }
 }
 
-[[nodiscard]] std::vector<std::pair<double, std::string>> ImageClassifier::run(const cv::Mat& image,
+[[nodiscard]] std::vector<std::pair<double, std::string>> ic::ImageClassifier::run(const cv::Mat& image,
     double confidence_threshold) const noexcept
 {
     // resize image to required dimensions
