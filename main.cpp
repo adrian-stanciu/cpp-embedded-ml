@@ -32,17 +32,15 @@ namespace {
         show_on_image(text, image, cv::Point(image.cols / 20, image.rows / 10));
     }
 
-    void handle_rps(std::optional<ic::RockPaperScissors>& rps, const std::string& player_hand, cv::Mat& image)
+    [[nodiscard]] std::string handle_rps(std::optional<ic::RockPaperScissors>& rps, const std::string& player_hand)
     {
-        if (!rps)
-            return;
-
         if (auto rps_game = rps->play(player_hand); rps_game) {
             auto text{rps_game->to_string()};
             fmt::print("{:s}\n", text);
-            show_on_image(text, image, cv::Point(image.cols / 20, image.rows / 5));
+            return text;
         } else {
             fmt::print(stderr, "failed to classify image as rock, paper or scissors\n");
+            return "";
         }
     }
 
@@ -58,7 +56,10 @@ namespace {
         if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty()) {
             report_results(results, image);
 
-            handle_rps(rps, results.front().label, image);
+            if (rps) {
+                auto rps_outcome{handle_rps(rps, results.front().label)};
+                show_on_image(rps_outcome, image, cv::Point(image.cols / 20, image.rows / 5));
+            }
 
             cv::imshow("camera", image);
             cv::waitKey(0);
@@ -72,11 +73,16 @@ namespace {
     [[nodiscard]] auto handle_camera_stream(const ic::ImageClassifier& image_classifier,
         std::optional<ic::RockPaperScissors>& rps)
     {
+        static constexpr auto SpaceKey{0x20};
+
         ic::Camera camera;
         if (!camera.is_open()) {
             fmt::print(stderr, "failed to open camera\n");
             return EXIT_FAILURE;
         }
+
+        auto player_ready{false};
+        std::string rps_outcome;
 
         while (true) {
             auto image{camera.read_image()};
@@ -88,14 +94,23 @@ namespace {
             if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty()) {
                 report_results(results, image);
 
-                handle_rps(rps, results.front().label, image);
+                if (rps) {
+                    if (std::exchange(player_ready, false))
+                        rps_outcome = handle_rps(rps, results.front().label);
+
+                    show_on_image(rps_outcome, image, cv::Point(image.cols / 20, image.rows / 5));
+                }
             } else {
                 fmt::print(stdout, "no results\n");
             }
             fmt::print("\n");
 
             cv::imshow("camera", image);
-            if (cv::waitKey(1) > 0)
+
+            auto key = cv::waitKey(1);
+            if (key == SpaceKey)
+                player_ready = true;
+            else if (key > 0)
                 break;
         }
 
