@@ -21,9 +21,10 @@
 
 #### Run
     make run \
-        [IMAGE=<path-to-image>] \
         [LABELS=<path-to-labels>] \
         [MODEL=<path-to-model>] \
+        [IN_IMAGE=<path-to-input-image>] \
+        [OUT_IMAGE=<path-to-output-image>] \
         [NUM_THREADS=<number-of-threads>] \
         [PLAY_RPS=YES]
 

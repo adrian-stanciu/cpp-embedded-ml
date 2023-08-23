@@ -20,8 +20,12 @@ LABELS ?= labels_mobilenet_quant_v1_224.txt
 MODEL ?= mobilenet_v1_1.0_224_quant.tflite
 RUN_CMD := LC_ALL=C LIBCAMERA_LOG_LEVELS=ERROR ./image_classifier -l ${LABELS} -m ${MODEL}
 
-ifdef IMAGE
-RUN_CMD := ${RUN_CMD} -i ${IMAGE}
+ifdef IN_IMAGE
+RUN_CMD := ${RUN_CMD} -i ${IN_IMAGE}
+endif
+
+ifdef OUT_IMAGE
+RUN_CMD := ${RUN_CMD} -o ${OUT_IMAGE}
 endif
 
 ifdef NUM_THREADS
