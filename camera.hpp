@@ -12,7 +12,7 @@ namespace ic {
             video/x-raw,
             width=(int)640,
             height=(int)480,
-            framerate=(fraction)30/1 !
+            framerate=(fraction)10/1 !
             videoconvert !
             appsink
         )"};
