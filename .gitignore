@@ -30,3 +30,16 @@
 *.exe
 *.out
 *.app
+
+# Archives
+*.zip
+
+# Data
+data/
+
+# Labels
+rps_labels.txt
+
+# Models
+rps_model.tflite
+

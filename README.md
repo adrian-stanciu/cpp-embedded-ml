@@ -7,7 +7,7 @@
     * Raspberry Pi Camera module 3
 * software:
     * 64-bit Raspberry Pi OS
-    * g++ (with c++20 support)
+    * g++ (with C++20 support)
     * make
     * libpthread
     * libcamera
@@ -33,4 +33,36 @@
 
 #### Uninstall
     sh uninstall.sh
+
+### Train Rock-Paper-Scissors lite model in Python with TensorFlow
+
+#### Prerequisites
+* hardware:
+    * development machine
+* software:
+    * Linux OS
+    * Python
+    * tensorflow Python module
+    * opencv-python
+* data:
+    * https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/rps_data_sample.zip
+    * https://www.kaggle.com/datasets/sanikamal/rock-paper-scissors-dataset
+
+#### Prepare data
+    mkdir -p data/raw
+
+    unzip rps_data_sample.zip
+    cp -r rps_data_sample/paper data/raw
+    cp -r rps_data_sample/rock data/raw
+    cp -r rps_data_sample/scissors data/raw
+
+    unzip rock-paper-scissors-data.zip
+    cp -r Rock-Paper-Scissors/train/* data/raw
+    cp -r Rock-Paper-Scissors/test/* data/raw
+
+#### Train model
+    python train_rps_lite_model.py
+
+#### Deploy model
+Copy `rps_labels.txt` and `rps_model.tflite` on a Raspberry Pi.
 
