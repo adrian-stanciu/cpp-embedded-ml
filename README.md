@@ -34,6 +34,23 @@
 #### Uninstall
     sh uninstall.sh
 
+#### Example
+Giving ![a tennis ball image](samples/tennis_ball_input.jpeg) as input to:
+
+    make run \
+        LABELS=labels_mobilenet_quant_v1_224.txt \
+        MODEL=mobilenet_v1_1.0_224_quant.tflite \
+        IN_IMAGE=tennis_ball_input.jpeg \
+        OUT_IMAGE=tennis_ball_output.jpeg \
+        NUM_THREADS=4
+
+then the result is:
+
+    inference duration: 33 ms
+    0.96 | tennis ball
+
+With a 96% probability the image represents a tennis ball.
+
 ### Train Rock-Paper-Scissors lite model in Python with TensorFlow
 
 #### Prerequisites
