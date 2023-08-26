@@ -122,29 +122,29 @@ namespace {
     }
 
     template <typename T>
-    [[nodiscard]] auto get_results(std::span<T> confidences, const std::vector<std::string>& labels,
-        double confidence_threshold)
+    [[nodiscard]] auto get_results(std::span<T> probabilities, const std::vector<std::string>& labels,
+        double probability_threshold)
     {
-        // results are expressed as (confidence, label) pairs, where confidence is between 0.0 and 1.0
+        // results are expressed as (probability, label) pairs, where probability is between 0.0 and 1.0
         std::vector<ic::ImageClassifier::Result> results;
 
-        for (size_t label_idx{0}; label_idx < confidences.size(); ++label_idx) {
-            auto confidence{1.0 * confidences[label_idx]};
+        for (size_t label_idx{0}; label_idx < probabilities.size(); ++label_idx) {
+            auto probability{1.0 * probabilities[label_idx]};
             if constexpr (std::is_same_v<T, uint8_t>) {
-                confidence /= std::numeric_limits<uint8_t>::max();
+                probability /= std::numeric_limits<uint8_t>::max();
             }
 
-            if (std::isnan(confidence))
+            if (std::isnan(probability))
                 continue;
-            if (confidence < confidence_threshold)
+            if (probability < probability_threshold)
                 continue;
 
-            results.emplace_back(confidence, labels[label_idx]);
+            results.emplace_back(probability, labels[label_idx]);
         }
 
-        // sort results in non-increasing order of confidence
+        // sort results in non-increasing order of probability
         std::sort(results.begin(), results.end(), [](const auto& lhs, const auto& rhs) {
-            return std::tie(lhs.confidence, rhs.label) > std::tie(rhs.confidence, lhs.label);
+            return std::tie(lhs.probability, rhs.label) > std::tie(rhs.probability, lhs.label);
         });
 
         return results;
@@ -152,7 +152,7 @@ namespace {
 }
 
 [[nodiscard]] std::vector<ic::ImageClassifier::Result> ic::ImageClassifier::run(const cv::Mat& image,
-    double confidence_threshold) const noexcept
+    double probability_threshold) const noexcept
 {
     // resize image to required dimensions
     cv::Mat resized_image;
@@ -188,10 +188,10 @@ namespace {
     switch (output_tensor_type) {
     case kTfLiteUInt8:
         return get_results(std::span{interpreter->typed_output_tensor<uint8_t>(0), labels.size()}, labels,
-            confidence_threshold);
+            probability_threshold);
     case kTfLiteFloat32:
         return get_results(std::span{interpreter->typed_output_tensor<float>(0), labels.size()}, labels,
-            confidence_threshold);
+            probability_threshold);
     default:
         fmt::print(stderr, "output tensor type {:d} not supported\n", output_tensor_type);
         return {};
