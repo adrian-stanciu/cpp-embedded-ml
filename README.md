@@ -83,3 +83,58 @@ With a 96% probability the image represents a tennis ball.
 #### Deploy model
 Copy `rps_labels.txt` and `rps_model.tflite` on a Raspberry Pi.
 
+### C++ Rock-Paper-Scissors hand gesture recognition with TensorFlow Lite on Raspberry Pi
+
+The same `image_classifier` application is able to perform Rock-Paper-Scissors hand gesture recognition.
+
+#### Rock example
+Giving ![a rock image](samples/rock_input.jpeg) as input to:
+
+    make run \
+        LABELS=rps_labels.txt \
+        MODEL=rps_model.tflite \
+        IN_IMAGE=rock_input.jpeg \
+        OUT_IMAGE=rock_output.jpeg \
+        NUM_THREADS=4
+
+then the result is:
+
+    inference duration: 70 ms
+    1.00 | rock
+
+With a 100% probability the image represents Rock.
+
+#### Paper example
+Giving ![a paper image](samples/paper_input.jpeg) as input to:
+
+    make run \
+        LABELS=rps_labels.txt \
+        MODEL=rps_model.tflite \
+        IN_IMAGE=paper_input.jpeg \
+        OUT_IMAGE=paper_output.jpeg \
+        NUM_THREADS=4
+
+then the result is:
+
+    inference duration: 71 ms
+    0.99 | paper
+
+With a 99% probability the image represents Paper.
+
+#### Scissors example
+Giving ![a scissors image](samples/scissors_input.jpeg) as input to:
+
+    make run \
+        LABELS=rps_labels.txt \
+        MODEL=rps_model.tflite \
+        IN_IMAGE=scissors_input.jpeg \
+        OUT_IMAGE=scissors_output.jpeg \
+        NUM_THREADS=4
+
+then the result is:
+
+    inference duration: 71 ms
+    0.95 | scissors
+
+With a 95% probability the image represents Scissors.
+
