@@ -15,7 +15,7 @@
 #include <opencv2/opencv.hpp>
 
 namespace {
-    constexpr auto ConfidenceThreshold{0.1};
+    constexpr auto ProbabilityThreshold{0.1};
 
     void show_on_image(const std::string& text, cv::Mat& image, cv::Point position)
     {
@@ -24,11 +24,11 @@ namespace {
 
     void report_results(const std::vector<ic::ImageClassifier::Result>& results, cv::Mat& image)
     {
-        for (const auto& [confidence, label] : results)
-            fmt::print("{:.2f} | {:s}\n", confidence, label);
+        for (const auto& [probability, label] : results)
+            fmt::print("{:.2f} | {:s}\n", probability, label);
 
-        const auto& [confidence, label]{results.front()};
-        auto text{fmt::format("{:.2f} | {:s}", confidence, label)};
+        const auto& [probability, label]{results.front()};
+        auto text{fmt::format("{:.2f} | {:s}", probability, label)};
         show_on_image(text, image, cv::Point(image.cols / 20, image.rows / 10));
     }
 
@@ -53,7 +53,7 @@ namespace {
             return EXIT_FAILURE;
         }
 
-        if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty()) {
+        if (auto results{image_classifier.run(image, ProbabilityThreshold)}; !results.empty()) {
             report_results(results, image);
 
             if (rps) {
@@ -93,7 +93,7 @@ namespace {
                 continue;
             }
 
-            if (auto results{image_classifier.run(image, ConfidenceThreshold)}; !results.empty()) {
+            if (auto results{image_classifier.run(image, ProbabilityThreshold)}; !results.empty()) {
                 report_results(results, image);
 
                 if (rps) {
