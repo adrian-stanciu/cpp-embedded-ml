@@ -17,17 +17,31 @@
 namespace {
     constexpr auto ProbabilityThreshold{0.1};
 
+    void print_results(const std::vector<ic::ImageClassifier::Result>& results)
+    {
+        for (const auto& [probability, label] : results)
+            fmt::print("{:.2f} | {:s}\n", probability, label);
+    }
+
+    [[nodiscard]] bool are_clear_results(const std::vector<ic::ImageClassifier::Result>& results)
+    {
+        if (results.empty())
+            return false;
+        if (results[0].probability < 0.75)
+            return false;
+        if (results.size() > 1 && results[1].probability > 0.5)
+            return false;
+        return true;
+    }
+
     void show_on_image(const std::string& text, cv::Mat& image, cv::Point position)
     {
         cv::putText(image, text.data(), position, cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 255), 2);
     }
 
-    void report_results(const std::vector<ic::ImageClassifier::Result>& results, cv::Mat& image)
+    void show_result(const ic::ImageClassifier::Result& result, cv::Mat& image)
     {
-        for (const auto& [probability, label] : results)
-            fmt::print("{:.2f} | {:s}\n", probability, label);
-
-        const auto& [probability, label]{results.front()};
+        const auto& [probability, label]{result};
         auto text{fmt::format("{:.2f} | {:s}", probability, label)};
         show_on_image(text, image, cv::Point(image.cols / 20, image.rows / 10));
     }
@@ -54,11 +68,17 @@ namespace {
         }
 
         if (auto results{image_classifier.run(image, ProbabilityThreshold)}; !results.empty()) {
-            report_results(results, image);
+            print_results(results);
 
-            if (rps) {
-                auto rps_outcome{handle_rps(rps, results.front().label)};
-                show_on_image(rps_outcome, image, cv::Point(image.cols / 20, image.rows / 5));
+            if (are_clear_results(results)) {
+                show_result(results.front(), image);
+
+                if (rps) {
+                    auto rps_outcome{handle_rps(rps, results.front().label)};
+                    show_on_image(rps_outcome, image, cv::Point(image.cols / 20, image.rows / 5));
+                }
+            } else {
+                fmt::print(stdout, "ambiguous results\n");
             }
 
             cv::imshow("camera", image);
@@ -94,18 +114,22 @@ namespace {
             }
 
             if (auto results{image_classifier.run(image, ProbabilityThreshold)}; !results.empty()) {
-                report_results(results, image);
+                print_results(results);
 
-                if (rps) {
-                    if (std::exchange(player_ready, false))
+                if (are_clear_results(results)) {
+                    show_result(results.front(), image);
+
+                    if (rps && std::exchange(player_ready, false))
                         rps_outcome = handle_rps(rps, results.front().label);
-
-                    show_on_image(rps_outcome, image, cv::Point(image.cols / 20, image.rows / 5));
+                } else {
+                    fmt::print(stdout, "ambiguous results\n");
                 }
             } else {
                 fmt::print(stdout, "no results\n");
             }
             fmt::print("\n");
+
+            show_on_image(rps_outcome, image, cv::Point(image.cols / 20, image.rows / 5));
 
             cv::imshow("camera", image);
 

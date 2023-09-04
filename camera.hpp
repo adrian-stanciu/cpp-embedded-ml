@@ -31,7 +31,7 @@ namespace ic {
             return image;
         }
 
-        private:
+    private:
         cv::VideoCapture camera;
     };
 
