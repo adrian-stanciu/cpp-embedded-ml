@@ -33,7 +33,7 @@ ic::ImageClassifier::ImageClassifier(std::string_view model_path, std::string_vi
     // build interpreter
     [this, num_threads]() {
         tflite::ops::builtin::BuiltinOpResolver resolver;
-        tflite::InterpreterBuilder builder(*model, resolver);
+        tflite::InterpreterBuilder builder{*model, resolver};
 
         if (builder.SetNumThreads(num_threads) != kTfLiteOk)
             fmt::print(stderr, "failed to set the number of threads to {:d}\n", num_threads);
