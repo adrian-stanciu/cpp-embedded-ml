@@ -54,9 +54,10 @@ ic::ImageClassifier::ImageClassifier(std::string_view model_path, std::string_vi
             throw std::runtime_error("failed to load labels");
 
         std::string label;
-        while (getline(labels_ifs, label))
+        while (getline(labels_ifs, label)) {
             if (!label.empty())
                 labels.push_back(std::move(label));
+        }
     }();
 
     // retrieve required image dimensions
@@ -98,32 +99,34 @@ ic::ImageClassifier::ImageClassifier(std::string_view model_path, std::string_vi
             throw std::runtime_error("not enough dims for output tensor");
 
         if (auto output_size{static_cast<size_t>(output_dims->data[output_dims->size - 1])};
-            output_size != labels.size())
+            output_size != labels.size()) {
             throw std::runtime_error(fmt::format("mismatch between output size ({:d}) and number of labels ({:d})",
                 output_size, labels.size()));
+        }
     }();
 }
 
 namespace {
     template <typename T>
-    void copy_image_to_tensor_data(const cv::Mat& image, T *tensor_data)
+    void copy_image_to_tensor_data(const cv::Mat &image, T *tensor_data)
     {
         if constexpr (std::is_same_v<T, uint8_t>) {
             std::memcpy(tensor_data, image.data, image.total() * image.elemSize());
         } else if constexpr (std::is_same_v<T, float>) {
             auto idx = 0;
-            for (auto row = 0; row < image.rows; ++row)
+            for (auto row = 0; row < image.rows; ++row) {
                 for (auto col = 0; col < image.cols; ++col) {
                     auto pixel = image.at<cv::Vec3b>(row, col);
                     for (auto ch = 0; ch < image.channels(); ++ch)
                         tensor_data[idx++] = pixel.val[ch];
                 }
+            }
         }
     }
 
     template <typename T>
-    [[nodiscard]] auto get_results(std::span<T> probabilities, const std::vector<std::string>& labels,
-        double probability_threshold)
+    [[nodiscard]] std::vector<ic::ImageClassifier::Result> get_results(std::span<T> probabilities,
+        const std::vector<std::string> &labels, double probability_threshold)
     {
         // results are expressed as (probability, label) pairs, where probability is between 0.0 and 1.0
         std::vector<ic::ImageClassifier::Result> results;
@@ -143,7 +146,7 @@ namespace {
         }
 
         // sort results in non-increasing order of probability
-        std::sort(results.begin(), results.end(), [](const auto& lhs, const auto& rhs) {
+        std::sort(results.begin(), results.end(), [](const auto &lhs, const auto &rhs) {
             return std::tie(lhs.probability, rhs.label) > std::tie(rhs.probability, lhs.label);
         });
 
@@ -151,7 +154,7 @@ namespace {
     }
 }
 
-[[nodiscard]] std::vector<ic::ImageClassifier::Result> ic::ImageClassifier::run(const cv::Mat& image,
+[[nodiscard]] std::vector<ic::ImageClassifier::Result> ic::ImageClassifier::run(const cv::Mat &image,
     double probability_threshold) const noexcept
 {
     // resize image to required dimensions

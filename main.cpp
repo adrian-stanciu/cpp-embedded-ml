@@ -3,8 +3,10 @@
 #include "image_classifier.hpp"
 #include "rps.hpp"
 
+#include <cmath>
 #include <cstdlib>
 #include <exception>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -17,36 +19,32 @@
 namespace {
     constexpr auto ProbabilityThreshold{0.1};
 
-    void print_results(const std::vector<ic::ImageClassifier::Result>& results)
+    [[nodiscard]] bool is_result_significant(const ic::ImageClassifier::Result &result)
     {
-        for (const auto& [probability, label] : results)
+        constexpr auto SignificantProbabilityThreshold{0.8};
+
+        return result.probability > SignificantProbabilityThreshold ||
+            std::abs(result.probability - SignificantProbabilityThreshold) < std::numeric_limits<double>::epsilon();
+    }
+
+    void print_results(const std::vector<ic::ImageClassifier::Result> &results)
+    {
+        for (const auto &[probability, label] : results)
             fmt::print("{:.2f} | {:s}\n", probability, label);
     }
 
-    [[nodiscard]] bool are_clear_results(const std::vector<ic::ImageClassifier::Result>& results)
-    {
-        if (results.empty())
-            return false;
-        if (results[0].probability < 0.75)
-            return false;
-        if (results.size() > 1 && results[1].probability > 0.5)
-            return false;
-        return true;
-    }
-
-    void show_on_image(const std::string& text, cv::Mat& image, cv::Point position)
+    void show_on_image(const std::string &text, cv::Mat &image, cv::Point position)
     {
         cv::putText(image, text.data(), position, cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 255), 2);
     }
 
-    void show_result(const ic::ImageClassifier::Result& result, cv::Mat& image)
+    void show_result_on_image(const ic::ImageClassifier::Result &result, cv::Mat &image)
     {
-        const auto& [probability, label]{result};
-        auto text{fmt::format("{:.2f} | {:s}", probability, label)};
+        auto text{fmt::format("{:.2f} | {:s}", result.probability, result.label)};
         show_on_image(text, image, cv::Point(image.cols / 20, image.rows / 10));
     }
 
-    [[nodiscard]] std::string handle_rps(std::optional<ic::RockPaperScissors>& rps, const std::string& player_hand)
+    [[nodiscard]] std::string handle_rps(std::optional<ic::RockPaperScissors> &rps, const std::string &player_hand)
     {
         if (auto rps_game = rps->play(player_hand); rps_game) {
             auto text{rps_game->to_string()};
@@ -58,8 +56,8 @@ namespace {
         }
     }
 
-    [[nodiscard]] auto handle_image(const ic::ImageClassifier& image_classifier, std::string_view input_image_path,
-        const char *output_image_path, std::optional<ic::RockPaperScissors>& rps)
+    [[nodiscard]] int handle_image(const ic::ImageClassifier &image_classifier, std::string_view input_image_path,
+        const char *output_image_path, std::optional<ic::RockPaperScissors> &rps)
     {
         auto image{cv::imread(input_image_path.data())};
         if (image.empty()) {
@@ -70,8 +68,8 @@ namespace {
         if (auto results{image_classifier.run(image, ProbabilityThreshold)}; !results.empty()) {
             print_results(results);
 
-            if (are_clear_results(results)) {
-                show_result(results.front(), image);
+            if (is_result_significant(results.front())) {
+                show_result_on_image(results.front(), image);
 
                 if (rps) {
                     auto rps_outcome{handle_rps(rps, results.front().label)};
@@ -92,8 +90,8 @@ namespace {
         }
     }
 
-    [[nodiscard]] auto handle_camera_stream(const ic::ImageClassifier& image_classifier,
-        const char *output_image_path, std::optional<ic::RockPaperScissors>& rps)
+    [[nodiscard]] int handle_camera_stream(const ic::ImageClassifier &image_classifier,
+        const char *output_image_path, std::optional<ic::RockPaperScissors> &rps)
     {
         static constexpr auto SpaceKey{0x20};
 
@@ -116,8 +114,8 @@ namespace {
             if (auto results{image_classifier.run(image, ProbabilityThreshold)}; !results.empty()) {
                 print_results(results);
 
-                if (are_clear_results(results)) {
-                    show_result(results.front(), image);
+                if (is_result_significant(results.front())) {
+                    show_result_on_image(results.front(), image);
 
                     if (rps && std::exchange(player_ready, false))
                         rps_outcome = handle_rps(rps, results.front().label);
@@ -134,9 +132,9 @@ namespace {
             cv::imshow("camera", image);
 
             auto key = cv::waitKey(1);
-            if (key == SpaceKey)
+            if (key == SpaceKey) {
                 player_ready = true;
-            else if (key > 0) {
+            } else if (key > 0) {
                 if (output_image_path)
                     cv::imwrite(output_image_path, image);
                 break;
@@ -171,7 +169,7 @@ int main(int argc, char **argv)
             return handle_image(image_classifier, options->input_image_path, options->output_image_path, rps);
         else
             return handle_camera_stream(image_classifier, options->output_image_path, rps);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         fmt::print("error: {:s}\n", e.what());
         return EXIT_FAILURE;
     }
