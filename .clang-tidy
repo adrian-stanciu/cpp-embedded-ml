@@ -1,0 +1,18 @@
+---
+
+Checks: "-*,
+         clang-analyzer-*,
+         bugprone-*,
+         -bugprone-easily-swappable-parameters,
+         misc-*,
+         -misc-non-private-member-variables-in-classes,
+         -misc-no-recursion,
+         modernize-*,
+         -modernize-use-trailing-return-type,
+         performance-*
+"
+
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+FormatStyle: none
+
