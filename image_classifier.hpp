@@ -29,4 +29,3 @@ namespace ic {
         int image_width{0};
     };
 }
-

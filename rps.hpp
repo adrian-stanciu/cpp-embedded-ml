@@ -7,11 +7,7 @@
 namespace ic {
     struct RockPaperScissors {
         struct Game {
-            enum class Result {
-                Win,
-                Draw,
-                Loss
-            };
+            enum class Result { Win, Draw, Loss };
 
             [[nodiscard]] std::string to_string() const noexcept;
 
@@ -35,4 +31,3 @@ namespace ic {
         size_t losses{0};
     };
 }
-

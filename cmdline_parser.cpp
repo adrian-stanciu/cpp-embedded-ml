@@ -14,7 +14,7 @@ namespace {
     void print_help(const char *binary)
     {
         fmt::print(
-R"(usage: {:s} [-g] [-i <path-to-input-image>] -l <path-to-labels> -m <path-to-model> [-o <path-to-output-image>] [-t <number-of-threads>]
+            R"(usage: {:s} [-g] [-i <path-to-input-image>] -l <path-to-labels> -m <path-to-model> [-o <path-to-output-image>] [-t <number-of-threads>]
 options:
     -g: optional rock-paper-scissors game enabled (disabled by default); press SPACE key to play a round
     -i: optional path to input image (live camera stream by default)
@@ -24,7 +24,7 @@ options:
     -t: optional number of threads to run the inference (1 by default)
 press any (non-SPACE in '-g' mode) key to exit
 )",
-        binary);
+            binary);
     }
 }
 
@@ -57,12 +57,12 @@ press any (non-SPACE in '-g' mode) key to exit
             options.output_image_path = optarg;
             break;
         case 't':
-            options.num_threads = [](std::string_view sv) -> std::optional<int> {
+            options.num_threads = [](std::string_view sv) -> int {
                 if (int value; std::from_chars(sv.data(), sv.data() + sv.size(), value).ec == std::errc{})
                     return value;
                 else
-                    return std::nullopt;
-            }(std::string_view{optarg, strlen(optarg)}).value_or(1);
+                    return 1;
+            }(std::string_view{optarg, strlen(optarg)});
             break;
         default:
             fmt::print(stderr, "unknown option '{:c}'\n", optopt);
@@ -81,4 +81,3 @@ press any (non-SPACE in '-g' mode) key to exit
 
     return options;
 }
-
