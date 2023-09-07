@@ -17,7 +17,7 @@ namespace ic {
             appsink
         )"};
 
-        Camera() : camera(GstreamerPipeline, cv::CAP_GSTREAMER) {}
+        Camera() : camera{GstreamerPipeline, cv::CAP_GSTREAMER} {}
 
         [[nodiscard]] bool is_open() const noexcept { return camera.isOpened(); }
 
