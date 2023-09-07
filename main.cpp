@@ -56,41 +56,45 @@ namespace {
         }
     }
 
-    [[nodiscard]] int handle_image(const ic::ImageClassifier &image_classifier, std::string_view input_image_path,
+    [[nodiscard]] bool handle_image(const ic::ImageClassifier &image_classifier, std::string_view input_image_path,
         const char *output_image_path, std::optional<ic::RockPaperScissors> &rps)
     {
         auto image{cv::imread(input_image_path.data())};
         if (image.empty()) {
             fmt::print(stderr, "empty image\n");
-            return EXIT_FAILURE;
+            return false;
         }
 
-        if (auto results{image_classifier.run(image, ProbabilityThreshold)}; !results.empty()) {
-            print_results(results);
-
-            if (is_result_significant(results.front())) {
-                show_result_on_image(results.front(), image);
-
-                if (rps) {
-                    auto rps_outcome{handle_rps(rps, results.front().label)};
-                    show_on_image(rps_outcome, image, cv::Point(image.cols / 20, image.rows / 5));
-                }
-            } else {
-                fmt::print(stdout, "ambiguous results\n");
-            }
-
-            cv::imshow("camera", image);
-            cv::waitKey(0);
-            if (output_image_path)
-                cv::imwrite(output_image_path, image);
-            return EXIT_SUCCESS;
-        } else {
+        auto results{image_classifier.run(image, ProbabilityThreshold)};
+        if (results.empty()) {
             fmt::print(stderr, "failed to classify image\n");
-            return EXIT_FAILURE;
+            return false;
         }
+
+        print_results(results);
+
+        if (is_result_significant(results.front())) {
+            show_result_on_image(results.front(), image);
+
+            if (rps) {
+                auto rps_outcome{handle_rps(rps, results.front().label)};
+                show_on_image(rps_outcome, image, cv::Point(image.cols / 20, image.rows / 5));
+            }
+        } else {
+            fmt::print(stdout, "ambiguous results\n");
+        }
+
+        cv::imshow("camera", image);
+
+        cv::waitKey(0);
+
+        if (output_image_path)
+            cv::imwrite(output_image_path, image);
+
+        return true;
     }
 
-    [[nodiscard]] int handle_camera_stream(const ic::ImageClassifier &image_classifier, const char *output_image_path,
+    [[nodiscard]] bool handle_camera_stream(const ic::ImageClassifier &image_classifier, const char *output_image_path,
         std::optional<ic::RockPaperScissors> &rps)
     {
         static constexpr auto SpaceKey{0x20};
@@ -98,7 +102,7 @@ namespace {
         ic::Camera camera;
         if (!camera.is_open()) {
             fmt::print(stderr, "failed to open camera\n");
-            return EXIT_FAILURE;
+            return false;
         }
 
         auto player_ready{false};
@@ -144,7 +148,7 @@ namespace {
         if (rps)
             rps->print_stats();
 
-        return EXIT_SUCCESS;
+        return true;
     }
 }
 
@@ -162,15 +166,17 @@ int main(int argc, char **argv)
     if (options->play_rps)
         rps = ic::RockPaperScissors{};
 
+    bool successful{false};
+
     try {
         ic::ImageClassifier image_classifier{options->model_path, options->labels_path, options->num_threads};
 
-        if (options->input_image_path)
-            return handle_image(image_classifier, options->input_image_path, options->output_image_path, rps);
-        else
-            return handle_camera_stream(image_classifier, options->output_image_path, rps);
+        successful = options->input_image_path ?
+            handle_image(image_classifier, options->input_image_path, options->output_image_path, rps) :
+            handle_camera_stream(image_classifier, options->output_image_path, rps);
     } catch (const std::exception &e) {
         fmt::print("error: {:s}\n", e.what());
-        return EXIT_FAILURE;
     }
+
+    return successful ? EXIT_SUCCESS : EXIT_FAILURE;
 }
