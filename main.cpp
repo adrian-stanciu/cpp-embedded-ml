@@ -90,8 +90,8 @@ namespace {
         }
     }
 
-    [[nodiscard]] int handle_camera_stream(const ic::ImageClassifier &image_classifier,
-        const char *output_image_path, std::optional<ic::RockPaperScissors> &rps)
+    [[nodiscard]] int handle_camera_stream(const ic::ImageClassifier &image_classifier, const char *output_image_path,
+        std::optional<ic::RockPaperScissors> &rps)
     {
         static constexpr auto SpaceKey{0x20};
 
@@ -174,4 +174,3 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 }
-

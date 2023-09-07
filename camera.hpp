@@ -19,10 +19,7 @@ namespace ic {
 
         Camera() : camera(GstreamerPipeline, cv::CAP_GSTREAMER) {}
 
-        [[nodiscard]] bool is_open() const noexcept
-        {
-            return camera.isOpened();
-        }
+        [[nodiscard]] bool is_open() const noexcept { return camera.isOpened(); }
 
         [[nodiscard]] cv::Mat read_image() noexcept
         {
@@ -37,4 +34,3 @@ namespace ic {
 
     [[nodiscard]] std::optional<cv::Mat> retrieve_image(const char *image_path);
 }
-

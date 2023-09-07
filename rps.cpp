@@ -12,7 +12,7 @@
 [[nodiscard]] std::string ic::RockPaperScissors::Game::to_string() const noexcept
 {
     return fmt::format("AI: {:s} | player: {:s} | {:s}", ai_hand, player_hand,
-        result == Result::Win ? "win" : result == Result::Loss ? "loss" : "draw");
+        result == Result::Win ? "win" : (result == Result::Loss ? "loss" : "draw"));
 }
 
 [[nodiscard]] std::optional<ic::RockPaperScissors::Game> ic::RockPaperScissors::play(std::string player_hand) noexcept
@@ -48,4 +48,3 @@ void ic::RockPaperScissors::print_stats() const noexcept
 {
     fmt::print("wins: {:d} | draws: {:d} | losses: {:d}\n", wins, draws, losses);
 }
-

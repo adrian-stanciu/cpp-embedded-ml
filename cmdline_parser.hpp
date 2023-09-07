@@ -14,4 +14,3 @@ namespace ic {
 
     [[nodiscard]] std::optional<ic::Options> parse_options(int argc, char **argv);
 }
-
