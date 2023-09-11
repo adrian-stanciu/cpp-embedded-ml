@@ -39,8 +39,8 @@ endif
 run: build
 	$(RUN_CMD)
 
-zip: $(SRCS) $(HDRS) $(SCRIPTS) Makefile README.md
-	zip image_classifier.zip $^
+zip: $(SRCS) $(HDRS) $(SCRIPTS) Makefile README.md images models
+	zip -r image_classifier.zip $^
 
 clean:
 	rm -f *.o image_classifier image_classifier.zip
