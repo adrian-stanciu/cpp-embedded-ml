@@ -35,13 +35,12 @@
     sh uninstall.sh
 
 #### Example
-Giving ![a tennis ball image](samples/tennis_ball_input.jpeg) as input to:
+Giving ![a tennis ball image](images/tennis_ball_input.jpeg) as input to:
 
     make run \
-        LABELS=labels_mobilenet_quant_v1_224.txt \
-        MODEL=mobilenet_v1_1.0_224_quant.tflite \
-        IN_IMAGE=tennis_ball_input.jpeg \
-        OUT_IMAGE=tennis_ball_output.jpeg \
+        LABELS=models/labels_mobilenet_quant_v1_224.txt \
+        MODEL=models/mobilenet_v1_1.0_224_quant.tflite \
+        IN_IMAGE=images/tennis_ball_input.jpeg \
         NUM_THREADS=4
 
 then the result is:
@@ -67,15 +66,16 @@ With a 96% probability the image represents a tennis ball.
 
 #### Prepare data
     mkdir -p data/raw
-
     unzip rps_data_sample.zip
     cp -r rps_data_sample/paper data/raw
     cp -r rps_data_sample/rock data/raw
     cp -r rps_data_sample/scissors data/raw
 
+or
+
+    mkdir -p data/raw
     unzip rock-paper-scissors-data.zip
     cp -r Rock-Paper-Scissors/train/* data/raw
-    cp -r Rock-Paper-Scissors/test/* data/raw
 
 #### Train model
     python train_rps_lite_model.py
@@ -88,53 +88,50 @@ Copy `rps_labels.txt` and `rps_model.tflite` on a Raspberry Pi.
 The same `image_classifier` application is able to perform Rock-Paper-Scissors hand gesture recognition.
 
 #### Rock example
-Giving ![a rock image](samples/rock_input.jpeg) as input to:
+Giving ![a rock image](images/rock_input.jpeg) as input to:
 
     make run \
-        LABELS=rps_labels.txt \
-        MODEL=rps_model.tflite \
-        IN_IMAGE=rock_input.jpeg \
-        OUT_IMAGE=rock_output.jpeg \
+        LABELS=models/rps_labels.txt \
+        MODEL=models/rps_big_dataset_model.tflite \
+        IN_IMAGE=images/rock_input.jpeg \
         NUM_THREADS=4
 
 then the result is:
 
     inference duration: 70 ms
-    1.00 | rock
+    0.96 | rock
 
-With a 100% probability the image represents Rock.
+With a 96% probability the image represents Rock.
 
 #### Paper example
-Giving ![a paper image](samples/paper_input.jpeg) as input to:
+Giving ![a paper image](images/paper_input.jpeg) as input to:
 
     make run \
-        LABELS=rps_labels.txt \
-        MODEL=rps_model.tflite \
-        IN_IMAGE=paper_input.jpeg \
-        OUT_IMAGE=paper_output.jpeg \
+        LABELS=models/rps_labels.txt \
+        MODEL=models/rps_big_dataset_model.tflite \
+        IN_IMAGE=images/paper_input.jpeg \
         NUM_THREADS=4
 
 then the result is:
 
-    inference duration: 71 ms
-    0.99 | paper
+    inference duration: 70 ms
+    1.00 | paper
 
-With a 99% probability the image represents Paper.
+With a 100% probability the image represents Paper.
 
 #### Scissors example
-Giving ![a scissors image](samples/scissors_input.jpeg) as input to:
+Giving ![a scissors image](images/scissors_input.jpeg) as input to:
 
     make run \
-        LABELS=rps_labels.txt \
-        MODEL=rps_model.tflite \
-        IN_IMAGE=scissors_input.jpeg \
-        OUT_IMAGE=scissors_output.jpeg \
+        LABELS=models/rps_labels.txt \
+        MODEL=models/rps_big_dataset_model.tflite \
+        IN_IMAGE=images/scissors_input.jpeg \
         NUM_THREADS=4
 
 then the result is:
 
     inference duration: 71 ms
-    0.95 | scissors
+    0.94 | scissors
 
-With a 95% probability the image represents Scissors.
+With a 94% probability the image represents Scissors.
 

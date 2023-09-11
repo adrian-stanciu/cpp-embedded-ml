@@ -117,7 +117,7 @@ namespace {
             for (auto row = 0; row < image.rows; ++row) {
                 for (auto col = 0; col < image.cols; ++col) {
                     auto pixel = image.at<cv::Vec3b>(row, col);
-                    for (auto ch = 0; ch < image.channels(); ++ch)
+                    for (auto ch = 0; ch < pixel.channels; ++ch)
                         tensor_data[idx++] = pixel.val[ch];
                 }
             }
