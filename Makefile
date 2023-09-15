@@ -16,8 +16,8 @@ image_classifier.o: image_classifier.cpp image_classifier.hpp
 main.o: main.cpp $(HDRS)
 rps.o: rps.cpp rps.hpp
 
-LABELS ?= labels_mobilenet_quant_v1_224.txt
-MODEL ?= mobilenet_v1_1.0_224_quant.tflite
+LABELS ?= models/labels_mobilenet_quant_v1_224.txt
+MODEL ?= models/mobilenet_v1_1.0_224_quant.tflite
 RUN_CMD := LC_ALL=C LIBCAMERA_LOG_LEVELS=ERROR ./image_classifier -l $(LABELS) -m $(MODEL)
 
 ifdef IN_IMAGE
