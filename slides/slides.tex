@@ -1,0 +1,101 @@
+% vim: set tw=78 aw sw=2 sts=2 noet:
+\documentclass{beamer}
+
+\usepackage[english]{babel}
+\usepackage{comment}
+\usepackage{array}
+\usepackage{listings}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+\setbeamertemplate{caption}{Source: \insertcaption}
+
+\AtBeginSection[]{
+  \begin{frame}
+	\vfill
+	\centering
+	\begin{beamercolorbox}[center]{title}
+	  \usebeamerfont{title}\insertsectionhead\par
+	\end{beamercolorbox}
+	\vfill
+  \end{frame}
+}
+
+\mode<presentation>
+
+\title{Leveraging the power of C++ for efficient machine learning on embedded
+devices}
+\subtitle{}
+\author{Adrian Stanciu\\{\small adrian.stanciu.pub@gmail.com}}
+\date{}
+\institute{NDC TechTown, 2023}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{About me}
+  \begin{itemize}
+	\item I am a software engineer from Romania
+	\item I have a bachelor's degree in computer science from Politehnica
+	University of Bucharest
+	\item I have a master's degree in computer and network security from
+	Politehnica University of Bucharest
+	\item I have 12 years of professional experience in Linux system
+	programming
+	\item My main programming languages are C and C++
+	\item I am interested in algorithms, data structures and operating systems
+	\item I work at Bitdefender, where I develop security software solutions
+	for routers
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Disclaimer}
+  \begin{itemize}
+	\item This presentation is based on a personal project I worked on in my
+	spare time and it is not directly related to the work I do at Bitdefender
+	\item The outcome of this project is just a proof of concept
+	\item All mistakes are mine
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Agenda}
+  \begin{itemize}
+	\item Motivation
+	\item Image classification
+	\item Hand gesture recognition
+	\item Best practices
+	\item Summary
+  \end{itemize}
+\end{frame}
+
+\input{sections/motivation}
+\input{sections/image_classification}
+\input{sections/hand_gesture_recognition}
+\input{sections/best_practices}
+\input{sections/summary}
+
+\begin{frame}{Resources}
+  \begin{itemize}
+	\item \url{https://github.com/google/bloaty}
+	\item \url{https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/examples/python}
+	\item \url{https://kaggle.com/datasets/sanikamal/rock-paper-scissors-dataset}
+	\item \url{https://raspberrypi.com/products/camera-module-3}
+	\item \url{https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/rps_data_sample.zip}
+	\item \url{https://tensorflow.org/lite/examples}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Feedback is welcome}
+  \url{https://forms.gle/BvSieuMRZbfKFpcq8}
+  \includegraphics[width=\linewidth,height=0.75\textheight,keepaspectratio]{images/feedback.png}
+\end{frame}
+
+\begin{frame}{Q\&A}
+  \begin{center}
+Thank you!
+  \end{center}
+\end{frame}
+
+\end{document}
+

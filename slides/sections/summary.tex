@@ -1,0 +1,52 @@
+% vim: set tw=78 aw sw=2 sts=2 noet:
+
+\section{Summary}
+
+\begin{frame}{Recap}
+  \begin{table}
+	\begin{tabular}{|c|c|c|}
+	  \hline
+		\textbf{Task} & \textbf{Model} & \textbf{Inference} \\
+	  \hline
+		\multicolumn{1}{|c|}{Image classification} &
+		pre-trained MobileNet & on-device \\
+	  \cline{1-2}
+		\multicolumn{1}{|c|}{Rock-Paper-Scissors} & Resnet & in C++ \\
+		\multicolumn{1}{|c|}{hand gesture recognition} & trained on host in Python & \\
+	  \hline
+	\end{tabular}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Future work}
+  \begin{itemize}
+	\item Introduce the "none" class to filter out ambiguities
+	\item Reduce the size of the model and decrease inference duration by:
+	  \begin{itemize}
+		\item Enabling full integer quantization
+		\item Converting images to gray scale
+	  \end{itemize}
+	\item Use \texttt{libcamera}'s API directly to reduce dependencies
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Future work}
+  \begin{figure}
+	\includegraphics[width=\linewidth,height=0.75\textheight,keepaspectratio]{images/480px-Pierre_ciseaux_feuille_lézard_spock_aligned.svg.png}
+	\caption{wikipedia.org}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Conclusions}
+  \begin{itemize}
+	\item Code isn't enough... data matters
+	\item More diverse data leads to better models
+	\item Building accurate models is an expert job
+	\item Running on-device inference is here to stay
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Repository}
+  \url{https://github.com/adrian-stanciu/cpp-embedded-ml}
+\end{frame}
+
