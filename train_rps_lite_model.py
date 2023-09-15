@@ -57,11 +57,11 @@ def build_resnet():
 def train_model():
     training_data = tf.keras.utils.image_dataset_from_directory(TRAINING_DATA_DIR,
         image_size = IMAGE_SIZE[0:2],
-        label_mode = 'categorical',
+        label_mode = "categorical",
         class_names = LABELS)
     validation_data = tf.keras.utils.image_dataset_from_directory(VALIDATION_DATA_DIR,
         image_size = IMAGE_SIZE[0:2],
-        label_mode = 'categorical',
+        label_mode = "categorical",
         class_names = LABELS)
 
     model = build_resnet()
