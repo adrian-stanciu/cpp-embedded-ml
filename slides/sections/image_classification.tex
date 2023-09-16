@@ -4,7 +4,7 @@
 
 \begin{frame}{Supervised learning}
 Machine learning paradigm in which an algorithm learns from labeled training
-data to make predictions or decisions
+data to make predictions
   \begin{figure}
 	\includegraphics[width=\linewidth,height=0.75\textheight,keepaspectratio]{images/supervised_learning.pdf}
   \end{figure}
@@ -108,7 +108,7 @@ data to make predictions or decisions
 	\item Resize image
 	\item Copy resized image to input tensor
 	\item Run inference
-	\item Extract results from output tensors
+	\item Extract results from output tensor
   \end{enumerate}
 \bigskip
 Steps 4-8 can be repeated multiple times
@@ -245,10 +245,18 @@ interpreter->Invoke();
 // std::unique_ptr<tflite::Interpreter> interpreter;
 // std::vector<std::string> labels;
 
-std::span<uint8_t> probabilities{
+std::span<uint8_t> outputs{
   interpreter->typed_output_tensor<uint8_t>(0),
   labels.size()
 };
+
+std::vector<float> probabilities;
+probabilities.reserve(labels.size());
+for (auto output : outputs) {
+  probabilities.push_back(
+    1.0 * output / std::numeric_limits<uint8_t>::max()
+  );
+}
   \end{lstlisting}
 \end{frame}
 
