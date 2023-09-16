@@ -254,7 +254,7 @@ std::vector<float> probabilities;
 probabilities.reserve(labels.size());
 for (auto output : outputs) {
   probabilities.push_back(
-    1.0 * output / std::numeric_limits<uint8_t>::max()
+    1.0f * output / std::numeric_limits<uint8_t>::max()
   );
 }
   \end{lstlisting}
