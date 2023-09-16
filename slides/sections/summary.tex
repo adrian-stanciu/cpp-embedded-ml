@@ -11,8 +11,8 @@
 		\multicolumn{1}{|c|}{Image classification} &
 		pre-trained MobileNet & on-device \\
 	  \cline{1-2}
-		\multicolumn{1}{|c|}{Rock-Paper-Scissors} & Resnet & in C++ \\
-		\multicolumn{1}{|c|}{hand gesture recognition} & trained on host in Python & \\
+		\multicolumn{1}{|c|}{Rock-Paper-Scissors} & transfer learning & in C++ \\
+		\multicolumn{1}{|c|}{hand gesture recognition} & from ResNet50 & \\
 	  \hline
 	\end{tabular}
   \end{table}
@@ -20,12 +20,8 @@
 
 \begin{frame}{Future work}
   \begin{itemize}
-	\item Introduce the "none" class to filter out ambiguities
-	\item Reduce the size of the model and decrease inference duration by:
-	  \begin{itemize}
-		\item Enabling integer quantization optimization
-		\item Converting images to gray scale
-	  \end{itemize}
+	\item Reduce the size of the model and decrease inference duration by
+	converting images to gray scale
 	\item Use \texttt{libcamera}'s API directly to reduce dependencies
   \end{itemize}
 \end{frame}

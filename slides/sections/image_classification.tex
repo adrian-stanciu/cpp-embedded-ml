@@ -12,7 +12,7 @@ data to make predictions
 
 \begin{frame}{Supervised learning}
   \begin{figure}
-	\includegraphics[width=\linewidth,height=0.75\textheight,keepaspectratio]{images/xkcd_machine_learning.png}
+	\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{images/xkcd_machine_learning.pdf}
 	\caption{xkcd.com}
   \end{figure}
 \end{frame}
@@ -20,13 +20,6 @@ data to make predictions
 \begin{frame}{Neural network (NN)}
   \begin{figure}
 	\includegraphics[width=\linewidth,height=0.75\textheight,keepaspectratio]{images/neural_network.pdf}
-  \end{figure}
-\end{frame}
-
-\begin{frame}{Neural network (NN)}
-  \begin{figure}
-	\includegraphics[width=\linewidth,height=\textheight,keepaspectratio]{images/monkeyuser_ai_care.png}
-	\caption{monkeyuser.com}
   \end{figure}
 \end{frame}
 
@@ -57,49 +50,31 @@ data to make predictions
   \end{figure}
 \end{frame}
 
-\begin{frame}{Software}
+\begin{frame}{Software dependencies}
   \begin{itemize}
-	\item 64-bit Raspberry Pi OS
-	\item gcc with C++20 support
 	\item TensorFlow Lite
 	\item OpenCV
   \end{itemize}
 \end{frame}
 
-\begin{frame}{TensorFlow Lite}
-  \begin{itemize}
-	\item Optimized pre-trained models
-	\item C++ and Python APIs
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Data organization}
-  \begin{itemize}
-	\item A tensor is an array in which data (both input and output) is organized
-	\item For 2D images the size of the tensor is computed as \\ \texttt{width * height *
-	channels * sizeof(type)}
-  \end{itemize}
+\begin{frame}{What is a tensor?}
+An array in which data (both input and output) is organized
 \end{frame}
 
 \begin{frame}{MobileNet pre-trained model}
   \begin{itemize}
 	\item CNN architecture created by Google
-	\item 1000 classes (labels)
+	\item Accepts 224x224-pixel images, with 3 color channels per pixel (RGB)
+	\item Trained on 1000 classes
 	\item Labels are stored separate from the model:
 	  \begin{itemize}
 		\item \texttt{labels\_mobilenet\_quant\_v1\_224.txt} (11KB)
 		\item \texttt{mobilenet\_v1\_1.0\_224\_quant.tflite} (4.1MB)
 	  \end{itemize}
-	\item Tensor dimensions:
-	  \begin{itemize}
-		\item 224x224 pixels images
-		\item 3 color channels per pixel (RGB)
-		\item Type is \texttt{uint8\_t}
-	  \end{itemize}
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Algorithm}
+\begin{frame}{Image classification algorithm}
   \begin{enumerate}
 	\item Load model and labels
 	\item Build interpreter
@@ -130,7 +105,6 @@ std::vector<std::string> labels;
 while (getline(labels_ifs, label)) {
   labels.push_back(std::move(label));
 }
-
   \end{lstlisting}
 \end{frame}
 
@@ -184,7 +158,7 @@ cv::resize(
   \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{6. Copy resized image to uint8\_t-typed input tensor}
+\begin{frame}[fragile]{6. Copy resized image to input tensor}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
 // std::unique_ptr<tflite::Interpreter> interpreter;
@@ -198,38 +172,6 @@ std::memcpy(
   \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{6. Copy resized image to float-typed input tensor - Wrong!}
-  \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
-  \begin{lstlisting}
-// std::unique_ptr<tflite::Interpreter> interpreter;
-// cv::Mat resized_image;
-
-std::memcpy(
-  interpreter->typed_input_tensor<float>(0),
-  resized_image.data,
-  resized_image.total() * resized_image.elemSize()
-);
-  \end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]{6. Copy resized image to float-typed input tensor - Correct}
-  \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
-  \begin{lstlisting}
-// std::unique_ptr<tflite::Interpreter> interpreter;
-// cv::Mat resized_image;
-
-auto idx = 0;
-for (auto row = 0; row < resized_image.rows; ++row) {
-  for (auto col = 0; col < resized_image.cols; ++col) {
-    auto pixel = resized_image.at<cv::Vec3b>(row, col);
-    for (auto ch = 0; ch < pixel.channels; ++ch) {
-      tensor_data[idx++] = pixel.val[ch];
-    }
-  }
-}
-  \end{lstlisting}
-\end{frame}
-
 \begin{frame}[fragile]{7. Run inference}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
@@ -239,7 +181,7 @@ interpreter->Invoke();
   \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{8. Extract results from uint8\_t-typed output tensors}
+\begin{frame}[fragile]{8. Extract results from output tensor}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
 // std::unique_ptr<tflite::Interpreter> interpreter;
@@ -260,24 +202,11 @@ for (auto output : outputs) {
   \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{8. Extract results from float-typed output tensors}
-  \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
-  \begin{lstlisting}
-// std::unique_ptr<tflite::Interpreter> interpreter;
-// std::vector<std::string> labels;
-
-std::span<float> probabilities{
-  interpreter->typed_output_tensor<float>(0),
-  labels.size()
-};
-  \end{lstlisting}
-\end{frame}
-
 \begin{frame}{Demo}
   \ttfamily \$ libcamera-jpeg --width=640 --height=480 -o out.jpeg
   \begin{figure}
 	\includegraphics[width=0.5\linewidth,height=0.5\textheight,keepaspectratio]{../images/tennis_ball_input.jpeg}%
-	\includegraphics[width=0.5\linewidth,height=0.5\textheight,keepaspectratio]{images/tomato.jpeg}
+	\includegraphics[width=0.5\linewidth,height=0.5\textheight,keepaspectratio]{../images/tomato.jpeg}
   \end{figure}
 \end{frame}
 
@@ -290,7 +219,7 @@ std::span<float> probabilities{
 
 \begin{frame}{Demo - Bad results}
   \begin{figure}
-	\includegraphics[width=\linewidth,height=0.5\textheight,keepaspectratio]{images/tomato.jpeg}
+	\includegraphics[width=\linewidth,height=0.5\textheight,keepaspectratio]{../images/tomato.jpeg}
   \end{figure}
   \ttfamily 0.30 | vase \\
   \ttfamily 0.25 | bell pepper \\

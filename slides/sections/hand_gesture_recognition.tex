@@ -14,7 +14,6 @@
 	\item Google MediaPipe's Rock-Paper-Scissors dataset for hand gesture
 	recognition
 	  \begin{itemize}
-		\item Has a "none" class
 		\item Contains 125 images for each class
 		\item Images have various sizes
 		\item Images have 3 color channels per pixel (RGB)
@@ -29,100 +28,11 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Train a CNN model - Prerequisites}
+\begin{frame}{Train a CNN-based Rock-Paper-Scissors model}
   \begin{itemize}
-	\item To be run on host
-	\item Python
-	\item TensorFlow Lite
-	\item OpenCV
+	\item Transfer learning from a ResNet50 model
+	\item Run in Python, on a laptop
   \end{itemize}
-\end{frame}
-
-\begin{frame}{Train a CNN model - Algorithm}
-  \begin{enumerate}
-	\item Build the model
-	\item Configure the model
-	\item Load the data
-	\item Train the model
-	\item Convert to lite model
-  \end{enumerate}
-\end{frame}
-
-\begin{frame}[fragile]{Train a CNN model - 1. Build the model}
-  \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
-  \begin{lstlisting}
-base_model = tf.keras.applications.ResNet50(
-  include_top = False,
-  input_shape = (96, 96, 3),
-  pooling = "avg"
-)
-
-base_model.trainable = False
-
-model = tf.keras.models.Sequential()
-
-model.add(base_model)
-model.add(tf.keras.layers.Dropout(rate = 0.5))
-model.add(
-  tf.keras.layers.Dense(
-    units = 3,
-    activation = tf.keras.activations.softmax
-  )
-)
-  \end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]{Train a CNN model - 2. Configure the model}
-  \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
-  \begin{lstlisting}
-model.compile(
-  optimizer = tf.keras.optimizers.SGD(),
-  loss = "categorical_crossentropy",
-  metrics = ["accuracy"]
-)
-  \end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]{Train a CNN model - 3. Load the data}
-  \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
-  \begin{lstlisting}
-LABELS = ["rock", "paper", "scissors"]
-
-training_data = tf.keras.utils.image_dataset_from_directory(
-  "data/training",
-  image_size = (96, 96),
-  label_mode = "categorical",
-  class_names = LABELS
-)
-
-validation_data = tf.keras.utils.image_dataset_from_directory(
-  "data/validation",
-  image_size = (96, 96),
-  label_mode = "categorical",
-  class_names = LABELS
-)
-  \end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]{Train a CNN model - 4. Train the model}
-  \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
-  \begin{lstlisting}
-model.fit(
-  training_data,
-  epochs = 10,
-  validation_data = validation_data
-)
-  \end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]{Train a CNN model - 5. Convert to lite model}
-  \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
-  \begin{lstlisting}
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
-converter.optimizations = [tf.lite.Optimize.DEFAULT]
-
-lite_model = converter.convert()
-  \end{lstlisting}
 \end{frame}
 
 \begin{frame}[fragile]{Train on small dataset}
@@ -239,39 +149,11 @@ Using its own testing dataset (124 images per class)
   \end{table}
 \end{frame}
 
-\begin{frame}{Inference using the trained CNN model}
-  \begin{itemize}
-	\item Same hardware setup
-	\item Same software dependencies
-	\item Same C++ code
-  \end{itemize}
-\end{frame}
-
 \begin{frame}{Demo}
   \begin{figure}
 	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{../images/rock_input.jpeg}%
 	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{../images/paper_input.jpeg}%
 	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{../images/scissors_input.jpeg}
-  \end{figure}
-\end{frame}
-
-\begin{frame}{Demo - Small dataset results}
-  \begin{figure}
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/rock_small_dataset_output.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/paper_small_dataset_output.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/scissors_small_dataset_output.jpeg}
-  \end{figure}
-  \ttfamily 0.54 | scissors \\
-  \ttfamily 0.31 | paper \\
-  \ttfamily 0.15 | rock \\
-  \ttfamily ambiguous results
-\end{frame}
-
-\begin{frame}{Demo - Big dataset results}
-  \begin{figure}
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/rock_output.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/paper_output.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/scissors_output.jpeg}
   \end{figure}
 \end{frame}
 
@@ -306,7 +188,6 @@ Using its own testing dataset (124 images per class)
   \begin{itemize}
 	\item Memory consumption with 4 threads: 118MB
   \end{itemize}
-
 \end{frame}
 
 \begin{frame}{Live camera stream}
@@ -357,16 +238,7 @@ camera >> image;
 \begin{frame}{Live inference - Demo}
 \end{frame}
 
-\begin{frame}{Live inference - Performance}
-Stats for 4 threads:
-  \begin{itemize}
-	\item Inference duration: 71ms
-	\item Loop duration: 96ms
-	\item Memory consumption: 123MB
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Rock-Paper-Scissors game mode}
+\begin{frame}{Rock-Paper-Scissors game}
 On each round the AI:
   \begin{enumerate}
 	\item Chooses Rock, Paper or Scissors uniformly at random
@@ -375,17 +247,6 @@ On each round the AI:
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{Rock-Paper-Scissors game mode - Demo}
-  \begin{figure}
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/rock_game_win.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/paper_game_win.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/scissors_game_win.jpeg}
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/rock_game_draw.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/paper_game_draw.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/scissors_game_draw.jpeg}
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/rock_game_loss.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/paper_game_loss.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{images/scissors_game_loss.jpeg}
-  \end{figure}
+\begin{frame}{Rock-Paper-Scissors game - Demo}
 \end{frame}
 
