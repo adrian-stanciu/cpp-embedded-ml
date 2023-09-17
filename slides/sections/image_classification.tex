@@ -57,10 +57,6 @@ data to make predictions
   \end{itemize}
 \end{frame}
 
-\begin{frame}{What is a tensor?}
-An array in which data (both input and output) is organized
-\end{frame}
-
 \begin{frame}{MobileNet pre-trained model}
   \begin{itemize}
 	\item CNN architecture created by Google
@@ -86,6 +82,7 @@ An array in which data (both input and output) is organized
 	\item Extract results from output tensor
   \end{enumerate}
 \bigskip
+Steps 1-3 represent the initialization phase \\
 Steps 4-8 can be repeated multiple times
 \end{frame}
 
@@ -203,11 +200,11 @@ for (auto output : outputs) {
 \end{frame}
 
 \begin{frame}{Demo}
-  \ttfamily \$ libcamera-jpeg --width=640 --height=480 -o out.jpeg
   \begin{figure}
 	\includegraphics[width=0.5\linewidth,height=0.5\textheight,keepaspectratio]{../images/tennis_ball_input.jpeg}%
 	\includegraphics[width=0.5\linewidth,height=0.5\textheight,keepaspectratio]{../images/tomato.jpeg}
   \end{figure}
+  \ttfamily \$ libcamera-jpeg --width=640 --height=480 -o out.jpeg
 \end{frame}
 
 \begin{frame}{Demo - Good results}
@@ -233,7 +230,7 @@ for (auto output : outputs) {
 
 \begin{frame}{Performance}
   \begin{itemize}
-	\item Compilation duration: 35s
+	\item Compilation duration (on Raspberry Pi): 35s
 	\item Binary size: 67KB
 	\item Running duration: 1s
   \end{itemize}
