@@ -24,7 +24,7 @@ namespace ic {
         [[nodiscard]] cv::Mat read_image() noexcept
         {
             cv::Mat image;
-            camera >> image;
+            camera.read(image);
             return image;
         }
 
