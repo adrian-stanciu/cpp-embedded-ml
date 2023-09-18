@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <cstring>
 #include <exception>
@@ -110,9 +111,9 @@ namespace {
     template <typename T>
     void copy_image_to_tensor_data(const cv::Mat &image, T *tensor_data)
     {
-        if constexpr (std::is_same_v<T, uint8_t>) {
+        if constexpr (sizeof(T) == 1) {
             std::memcpy(tensor_data, image.data, image.total() * image.elemSize());
-        } else if constexpr (std::is_same_v<T, float>) {
+        } else {
             auto idx = 0;
             for (auto row = 0; row < image.rows; ++row) {
                 for (auto col = 0; col < image.cols; ++col) {
@@ -125,7 +126,7 @@ namespace {
     }
 
     template <typename T>
-    [[nodiscard]] std::vector<ic::ImageClassifier::Result> get_results(std::span<T> probabilities,
+    [[nodiscard]] std::vector<ic::ImageClassifier::Result> get_results(const std::span<T> probabilities,
         const std::vector<std::string> &labels, double probability_threshold)
     {
         // results are expressed as (probability, label) pairs, where probability is between 0.0 and 1.0
@@ -133,8 +134,8 @@ namespace {
 
         for (size_t label_idx{0}; label_idx < probabilities.size(); ++label_idx) {
             auto probability{1.0 * probabilities[label_idx]};
-            if constexpr (std::is_same_v<T, uint8_t>) {
-                probability /= std::numeric_limits<uint8_t>::max();
+            if constexpr (std::integral<T>) {
+                probability /= std::numeric_limits<T>::max();
             }
 
             if (std::isnan(probability))
