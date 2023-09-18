@@ -133,7 +133,7 @@ namespace {
         std::vector<ic::ImageClassifier::Result> results;
 
         for (size_t label_idx{0}; label_idx < probabilities.size(); ++label_idx) {
-            auto probability{1.0 * probabilities[label_idx]};
+            auto probability{1.0f * probabilities[label_idx]};
             if constexpr (std::integral<T>) {
                 probability /= std::numeric_limits<T>::max();
             }
