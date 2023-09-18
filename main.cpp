@@ -17,11 +17,11 @@
 #include <opencv2/opencv.hpp>
 
 namespace {
-    constexpr auto ProbabilityThreshold{0.1};
+    constexpr auto ProbabilityThreshold{0.1f};
 
     [[nodiscard]] bool is_result_significant(const ic::ImageClassifier::Result &result)
     {
-        constexpr auto SignificantProbabilityThreshold{0.8};
+        constexpr auto SignificantProbabilityThreshold{0.8f};
 
         return result.probability > SignificantProbabilityThreshold ||
             std::abs(result.probability - SignificantProbabilityThreshold) < std::numeric_limits<double>::epsilon();
