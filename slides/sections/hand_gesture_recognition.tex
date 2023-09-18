@@ -21,59 +21,37 @@
 	\item Laurence Moroney's Rock-Paper-Scissors dataset (published by Sani
 	Kamal on Kaggle)
 	  \begin{itemize}
-		\item Contains 964 images for each class split into training set (840) and testing set (124)
+		\item Contains 964 images for each class split into training data
+		(840) and testing data (124)
 		\item Images are 300x300 pixels
 		\item Images have 3 color channels per pixel (RGB)
 	  \end{itemize}
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Train a CNN-based Rock-Paper-Scissors model}
+\begin{frame}{Train a Rock-Paper-Scissors model}
   \begin{itemize}
 	\item Transfer learning from a ResNet50 model
+	\item 80/20 split between training and validation data
 	\item Run in Python, on a laptop
   \end{itemize}
+  \begin{table}
+	\begin{tabular}{|c|c|c|}
+	  \hline
+		\textbf{Dataset} & \textbf{Train duration} & \textbf{Model size (MB)} \\
+	  \hline
+		Small & 2m15s & 23 \\
+	  \hline
+		Big & 7m10s & 23 \\
+	  \hline
+	\end{tabular}
+  \end{table}
 \end{frame}
 
-\begin{frame}[fragile]{Train on small dataset}
+\begin{frame}{Test the Rock-Paper-Scissors model}
   \begin{itemize}
-	\item Random shuffle and split the images into:
-	\begin{itemize}
-	  \item 80\% for training (300 images)
-	  \item 20\% for validation (75 images)
-	\end{itemize}
-  \end{itemize}
-  \lstset{basicstyle=\tiny, numbers=left}
-  \begin{lstlisting}
-Epoch 1/10
-9s - loss: 2.0545 - accuracy: 0.5700 - val_loss: 3.0788 - val_accuracy: 0.4800
-Epoch 2/10
-5s - loss: 1.4671 - accuracy: 0.7300 - val_loss: 1.5156 - val_accuracy: 0.7467
-Epoch 3/10
-5s - loss: 0.6304 - accuracy: 0.8567 - val_loss: 0.1994 - val_accuracy: 0.9467
-Epoch 4/10
-5s - loss: 0.3750 - accuracy: 0.9100 - val_loss: 0.3066 - val_accuracy: 0.9067
-Epoch 5/10
-5s - loss: 0.4212 - accuracy: 0.8933 - val_loss: 0.2647 - val_accuracy: 0.9333
-Epoch 6/10
-5s - loss: 0.3357 - accuracy: 0.8933 - val_loss: 0.1780 - val_accuracy: 0.9200
-Epoch 7/10
-5s - loss: 0.1435 - accuracy: 0.9533 - val_loss: 0.1747 - val_accuracy: 0.9733
-Epoch 8/10
-5s - loss: 0.2573 - accuracy: 0.9267 - val_loss: 0.1982 - val_accuracy: 0.9333
-Epoch 9/10
-5s - loss: 0.1846 - accuracy: 0.9367 - val_loss: 0.1352 - val_accuracy: 0.9867
-Epoch 10/10
-5s - loss: 0.1590 - accuracy: 0.9433 - val_loss: 0.1135 - val_accuracy: 0.9600
-  \end{lstlisting}
-  \begin{itemize}
-	\item Duration: 2m15s
-	\item Model size: 23MB
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Test on small dataset}
-Using the testing dataset of the big dataset (124 images per class)
+	\item Using the testing data of the big dataset (124 images per class)
+	\item Small dataset results:
   \begin{table}
 	\begin{tabular}{|c|c|c|}
 	  \hline
@@ -90,47 +68,7 @@ Using the testing dataset of the big dataset (124 images per class)
 	  \hline
 	\end{tabular}
   \end{table}
-\end{frame}
-
-\begin{frame}[fragile]{Train on big dataset}
-  \begin{itemize}
-	\item Random shuffle and split the training set:
-	\begin{itemize}
-	  \item 80\% for training (2016 images)
-	  \item 20\% for validation (504 images)
-	\end{itemize}
-  \end{itemize}
-  \lstset{basicstyle=\tiny, numbers=left}
-  \begin{lstlisting}
-Epoch 1/10
-37s - loss: 1.0362 - accuracy: 0.8284 - val_loss: 0.1478 - val_accuracy: 0.9385
-Epoch 2/10
-35s - loss: 0.1554 - accuracy: 0.9444 - val_loss: 0.0386 - val_accuracy: 0.9861
-Epoch 3/10
-35s - loss: 0.1092 - accuracy: 0.9608 - val_loss: 0.0256 - val_accuracy: 0.9901
-Epoch 4/10
-35s - loss: 0.0918 - accuracy: 0.9668 - val_loss: 0.0133 - val_accuracy: 0.9980
-Epoch 5/10
-35s - loss: 0.0589 - accuracy: 0.9797 - val_loss: 0.0325 - val_accuracy: 0.9861
-Epoch 6/10
-35s - loss: 0.0500 - accuracy: 0.9826 - val_loss: 0.0091 - val_accuracy: 0.9980
-Epoch 7/10
-35s - loss: 0.0361 - accuracy: 0.9896 - val_loss: 0.0070 - val_accuracy: 1.0000
-Epoch 8/10
-35s - loss: 0.0410 - accuracy: 0.9856 - val_loss: 0.0071 - val_accuracy: 1.0000
-Epoch 9/10
-35s - loss: 0.0310 - accuracy: 0.9886 - val_loss: 0.0074 - val_accuracy: 1.0000
-Epoch 10/10
-35s - loss: 0.0395 - accuracy: 0.9866 - val_loss: 0.0046 - val_accuracy: 1.0000
-  \end{lstlisting}
-  \begin{itemize}
-	\item Duration: 7m10s
-	\item Model size: 23MB
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Test on big dataset}
-Using its own testing dataset (124 images per class)
+	\item Big dataset results:
   \begin{table}
 	\begin{tabular}{|c|c|c|}
 	  \hline
@@ -147,6 +85,7 @@ Using its own testing dataset (124 images per class)
 	  \hline
 	\end{tabular}
   \end{table}
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Demo}
@@ -190,7 +129,7 @@ Using its own testing dataset (124 images per class)
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Live camera stream}
+\begin{frame}{Capture live camera stream}
   \begin{itemize}
 	\item libcamera backend
 	\item gstreamer middleware
@@ -198,7 +137,7 @@ Using its own testing dataset (124 images per class)
   \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Live camera stream}
+\begin{frame}[fragile]{Capture live camera stream}
   \lstset{basicstyle=\ttfamily\small, showstringspaces=false, numbers=left,
   columns=fullflexible}
   \begin{lstlisting}
@@ -218,7 +157,7 @@ cv::VideoCapture camera{
 };
 
 cv::Mat image;
-camera >> image;
+camera.read(image);
   \end{lstlisting}
 \end{frame}
 
