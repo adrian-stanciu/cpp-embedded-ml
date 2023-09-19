@@ -89,6 +89,7 @@ Steps 4-8 can be repeated multiple times
 \begin{frame}[fragile]{1. Load model and labels}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
+// defined and properly initialized elsewhere:
 // const char *model_path;
 // const char *labels_path;
 
@@ -108,6 +109,7 @@ while (getline(labels_ifs, label)) {
 \begin{frame}[fragile]{2. Build interpreter}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
+// defined and properly initialized elsewhere:
 // std::unique_ptr<tflite::FlatBufferModel> model;
 // int num_threads;
 
@@ -124,6 +126,7 @@ builder(&interpreter);
 \begin{frame}[fragile]{3. Allocate input and output tensors}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
+// defined and properly initialized elsewhere:
 // std::unique_ptr<tflite::Interpreter> interpreter;
 
 interpreter->AllocateTensors();
@@ -133,6 +136,7 @@ interpreter->AllocateTensors();
 \begin{frame}[fragile]{4. Read image}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
+// defined and properly initialized elsewhere:
 // const char *image_path;
 
 cv::Mat image{cv::imread(image_path)};
@@ -142,6 +146,7 @@ cv::Mat image{cv::imread(image_path)};
 \begin{frame}[fragile]{5. Resize image}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
+// defined and properly initialized elsewhere:
 // cv::Mat image;
 // int required_image_width;
 // int required_image_height;
@@ -158,6 +163,7 @@ cv::resize(
 \begin{frame}[fragile]{6. Copy resized image to input tensor}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
+// defined and properly initialized elsewhere:
 // std::unique_ptr<tflite::Interpreter> interpreter;
 // cv::Mat resized_image;
 
@@ -172,6 +178,7 @@ std::memcpy(
 \begin{frame}[fragile]{7. Run inference}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
+// defined and properly initialized elsewhere:
 // std::unique_ptr<tflite::Interpreter> interpreter;
 
 interpreter->Invoke();
@@ -181,6 +188,7 @@ interpreter->Invoke();
 \begin{frame}[fragile]{8. Extract results from output tensor}
   \lstset{basicstyle=\ttfamily\small, numbers=left, columns=fullflexible}
   \begin{lstlisting}
+// defined and properly initialized elsewhere:
 // std::unique_ptr<tflite::Interpreter> interpreter;
 // std::vector<std::string> labels;
 
