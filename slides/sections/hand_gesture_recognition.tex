@@ -88,14 +88,6 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Demo}
-  \begin{figure}
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{../images/rock_input.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{../images/paper_input.jpeg}%
-	\includegraphics[width=0.33\linewidth,height=0.5\textheight,keepaspectratio]{../images/scissors_input.jpeg}
-  \end{figure}
-\end{frame}
-
 \begin{frame}{Performance}
   \begin{itemize}
 	\item Compilation duration (on Raspberry Pi): 35s
@@ -129,7 +121,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Capture live camera stream}
+\begin{frame}{Capture camera stream}
   \begin{itemize}
 	\item libcamera backend
 	\item gstreamer middleware
@@ -137,7 +129,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Capture live camera stream}
+\begin{frame}[fragile]{Capture camera stream}
   \lstset{basicstyle=\ttfamily\small, showstringspaces=false, numbers=left,
   columns=fullflexible}
   \begin{lstlisting}
@@ -174,9 +166,6 @@ camera.read(image);
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{Live inference - Demo}
-\end{frame}
-
 \begin{frame}{Rock-Paper-Scissors game}
 On each round the AI:
   \begin{enumerate}
@@ -184,8 +173,5 @@ On each round the AI:
 	\item Infers the human's hand gesture
 	\item Computes the outcome
   \end{enumerate}
-\end{frame}
-
-\begin{frame}{Rock-Paper-Scissors game - Demo}
 \end{frame}
 
